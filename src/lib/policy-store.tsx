@@ -26,6 +26,7 @@ const SEED_OVERRIDES: Override[] = [
 export function PolicyProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<VersionMode>("compare");
   const [tab, setTab] = useState<PanelTab>("overview");
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Override[]>(SEED_OVERRIDES);
 
   const value = useMemo<PolicyState>(
@@ -34,6 +35,8 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
       setMode,
       tab,
       setTab,
+      selectedClaimId,
+      selectClaim: setSelectedClaimId,
       overrides,
       addOverride: (override) =>
         setOverrides((prev) => [

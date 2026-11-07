@@ -18,6 +18,8 @@ export interface PolicyState {
   setMode: (mode: VersionMode) => void;
   tab: PanelTab;
   setTab: (tab: PanelTab) => void;
+  selectedClaimId: string | null;
+  selectClaim: (claimId: string | null) => void;
   overrides: Override[];
   addOverride: (override: Omit<Override, "id" | "at">) => void;
   overridesFor: (claimId: string) => Override[];
