@@ -119,7 +119,7 @@
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
-  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.06), 0 0 22px oklch(1 0 0 / 0.1), inset 0 0 26px oklch(1 0 0 / 0.04);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
@@ -173,7 +173,7 @@
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
-  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.06), 0 0 22px oklch(1 0 0 / 0.1), inset 0 0 26px oklch(1 0 0 / 0.04);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
@@ -226,5 +226,5 @@ h1, h2, .text-glow { text-shadow: 0 0 18px oklch(1 0 0 / 0.08); }
   box-shadow: var(--edge-glow);
 }
 .rounded-sm.border:not([class*="border-decision"]) {
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.05), 0 0 12px oklch(1 0 0 / 0.06);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08), 0 0 9px oklch(1 0 0 / 0.08);
 }
