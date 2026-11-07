@@ -130,8 +130,8 @@ function ClaimsQueue() {
                 ))}
               </div>
             </div>
-            <SmallKpi label="Active claims" value={String(openCount)} chip={`of ${total}`} caption="Open claims under the current policy" />
-            <SmallKpi label="Open claim volume" value={`€${Math.round(openVolume).toLocaleString("de-DE")}`} chip={`Ø €${Math.round(openVolume / Math.max(1, openCount)).toLocaleString("de-DE")}`} caption="Total amount of active claims" />
+            <SmallKpi label="Active claims" value={String(openCount)} chip={`of ${total}`} />
+            <SmallKpi label="Open claim volume" value={`€${Math.round(openVolume).toLocaleString("de-DE")}`} chip={`Ø €${Math.round(openVolume / Math.max(1, openCount)).toLocaleString("de-DE")}`} />
           </div>
 
           <div className="rounded-lg border border-border bg-card">
@@ -139,7 +139,7 @@ function ClaimsQueue() {
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Click a claim to open it · <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{total}</span> · policy <span className="font-mono">{mode}</span>
+              Click a claim to open it
             </p>
           </div>
           <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
@@ -290,7 +290,7 @@ function ClaimsQueue() {
   );
 }
 
-function SmallKpi({ label, value, chip, caption }: { label: string; value: string; chip: string; caption: string }) {
+function SmallKpi({ label, value, chip }: { label: string; value: string; chip: string }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2">
@@ -298,7 +298,6 @@ function SmallKpi({ label, value, chip, caption }: { label: string; value: strin
         <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-foreground">{chip}</span>
       </div>
       <p className="mt-2 font-mono text-[2.75rem] leading-none font-medium tabular-nums tracking-[-0.02em] text-foreground">{value}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground">{caption}</p>
     </div>
   );
 }

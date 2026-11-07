@@ -29,7 +29,6 @@ import {
   DECISION_LABELS,
   DECISION_ORDER,
   LIVE_DECISION_ORDER,
-  getRule,
   isChanged,
   type Claim,
   type Decision,
@@ -38,7 +37,6 @@ import { usePolicy } from "@/lib/policy-store";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
-  const rule = claim.ruleInfo ?? getRule(claim.rule);
   const decisionOptions = claim.live ? LIVE_DECISION_ORDER : DECISION_ORDER;
   const claimOverrides = overridesFor(claim.id);
   const changed = isChanged(claim);
@@ -73,7 +71,6 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
       <div className="shrink-0 space-y-3 border-b border-border p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="eyebrow mb-1.5">Claim</p>
             <h2 className="font-mono text-xl font-medium tabular-nums tracking-tight text-foreground">
               {claim.id}
             </h2>
@@ -109,13 +106,6 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="eyebrow">Rule</span>
-          <Badge variant="outline" className="rounded-sm font-mono tabular-nums">
-            {claim.rule}
-          </Badge>
-          <span className="truncate">{rule.name}</span>
-        </div>
       </div>
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">

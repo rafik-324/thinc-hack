@@ -258,19 +258,14 @@ h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
 }
 
 /* Subtle dot grid behind the app: black with slightly lighter grey dots that fade out
-   towards the edges. Fixed, so it stays put while the content scrolls over it. */
-/* The scroll area repeats the identical (viewport-fixed) pattern on an opaque base: its edge
-   mask is a backdrop root, so cards inside can only blur what is painted inside it. At the
-   masked edges it fades into the same pattern underneath, so the seam is invisible. */
-.bg-dots,
-#app-scroll {
+   towards the edges. The page itself does not scroll (#app-scroll does), so it stays put. */
+.bg-dots {
   background-color: var(--color-background);
   background-image:
     radial-gradient(ellipse 120% 90% at 50% 35%, transparent 50%, oklch(0 0 0 / 0.75) 100%),
     radial-gradient(circle, oklch(1 0 0 / 0.16) 1px, transparent 1.4px);
   background-size: 100% 100%, 22px 22px;
   background-position: center, center;
-  background-attachment: fixed, fixed;
 }
 
 /* Subtle glassmorphism: cards, sidebar and top bar are translucent and blur what lies
@@ -279,4 +274,31 @@ h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
   -webkit-backdrop-filter: blur(2px) saturate(140%);
   backdrop-filter: blur(2px) saturate(140%);
   box-shadow: var(--edge-glow), inset 0 1px 0 oklch(1 0 0 / 0.045);
+}
+
+/* Text selection in a translucent app green (routine processing hue); text keeps its colour. */
+::selection {
+  background-color: oklch(0.87 0.15 150 / 0.32);
+  color: oklch(0.985 0 0);
+}
+
+/* The scroll area's edge mask is a backdrop root: cards inside can only blur what is painted
+   inside it. So the same dot grid is repeated there as a viewport-fixed layer behind the
+   content. A fixed layer (not background-attachment: fixed) keeps scrolling on the compositor;
+   a fixed background on the scroller made Chrome leave content stuck while scrolling up. */
+#app-scroll {
+  isolation: isolate;
+}
+#app-scroll::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(ellipse 120% 90% at 50% 35%, transparent 50%, oklch(0 0 0 / 0.75) 100%),
+    radial-gradient(circle, oklch(1 0 0 / 0.16) 1px, transparent 1.4px);
+  background-size: 100% 100%, 22px 22px;
+  background-position: center, center;
 }

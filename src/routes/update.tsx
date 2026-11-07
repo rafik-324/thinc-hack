@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronRight,
   CircleAlert,
   CircleHelp,
   Lock,
@@ -21,6 +22,7 @@ import {
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -133,13 +135,7 @@ function PolicyUpdate() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="eyebrow mb-1.5">Policy v1 → v2</p>
-        <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          What changes when the claims portfolio is replayed under policy v2 instead of v1.
-        </p>
-      </div>
+      <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi) => (
@@ -148,7 +144,12 @@ function PolicyUpdate() {
               <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
                 {kpi.label}
               </p>
-              <p className={cn("mt-2 text-[2rem] leading-none font-mono tabular-nums font-medium tracking-[-0.02em] text-foreground", kpi.valueClass)}>
+              <p
+                className={cn(
+                  "mt-2 text-[2rem] leading-none font-mono tabular-nums font-medium tracking-[-0.02em] text-foreground",
+                  kpi.valueClass,
+                )}
+              >
                 {kpi.value}
               </p>
               {kpi.hint && <p className="mt-2 text-[11px] text-muted-foreground">{kpi.hint}</p>}
@@ -197,7 +198,7 @@ function PolicyUpdate() {
                                 offDiagonal
                                   ? "bg-decision-specialist/25 text-decision-specialist"
                                   : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
-                                    HEAT_SHADES[0]),
+                                      HEAT_SHADES[0]),
                                 count >= 3 && !offDiagonal
                                   ? "text-decision-standard-foreground"
                                   : "text-foreground",
@@ -226,8 +227,15 @@ function PolicyUpdate() {
           <CardContent>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={changedPerRule} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                <BarChart
+                  data={changedPerRule}
+                  margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="rule"
                     tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
@@ -254,7 +262,11 @@ function PolicyUpdate() {
                     {changedPerRule.map((entry) => (
                       <Cell
                         key={entry.rule}
-                        fill={entry.changed > 0 ? "var(--color-decision-standard)" : "var(--color-muted)"}
+                        fill={
+                          entry.changed > 0
+                            ? "var(--color-decision-standard)"
+                            : "var(--color-muted)"
+                        }
                       />
                     ))}
                   </Bar>
@@ -265,55 +277,71 @@ function PolicyUpdate() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Changed claims</CardTitle>
-        </CardHeader>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Claim ID</TableHead>
-              <TableHead>Rule</TableHead>
-              <TableHead>v1</TableHead>
-              <TableHead />
-              <TableHead>v2</TableHead>
-              <TableHead>Decisive fact</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {changedClaims.map((claim) => (
-              <TableRow key={claim.id}>
-                <TableCell>
-                  <Link
-                    to="/queue"
-                    search={{ claim: claim.id }}
-                    className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
-                  >
-                    {claim.id}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono tabular-nums">{claim.rule}</Badge>
-                </TableCell>
-                <TableCell>
-                  <DecisionBadge decision={claim.decisionV1} />
-                </TableCell>
-                <TableCell>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </TableCell>
-                <TableCell>
-                  <DecisionBadge decision={claim.decisionV2} />
-                </TableCell>
-                <TableCell className="max-w-md">
-                  <span className="line-clamp-2 text-sm text-muted-foreground">
-                    {claim.decisiveFact}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <Collapsible defaultOpen asChild>
+        <Card>
+          <CardHeader className="p-0">
+            <CollapsibleTrigger className="group flex w-full items-center gap-2 p-6 text-left">
+              <ChevronRight
+                aria-hidden="true"
+                className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90"
+                strokeWidth={1.5}
+              />
+              <CardTitle className="text-base">Changed claims</CardTitle>
+              <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+                {changedClaims.length}
+              </span>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Claim ID</TableHead>
+                  <TableHead>Rule</TableHead>
+                  <TableHead>v1</TableHead>
+                  <TableHead />
+                  <TableHead>v2</TableHead>
+                  <TableHead>Decisive fact</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {changedClaims.map((claim) => (
+                  <TableRow key={claim.id}>
+                    <TableCell>
+                      <Link
+                        to="/queue"
+                        search={{ claim: claim.id }}
+                        className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
+                      >
+                        {claim.id}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono tabular-nums">
+                        {claim.rule}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DecisionBadge decision={claim.decisionV1} />
+                    </TableCell>
+                    <TableCell>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
+                    <TableCell>
+                      <DecisionBadge decision={claim.decisionV2} />
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <span className="line-clamp-2 text-sm text-muted-foreground">
+                        {claim.decisiveFact}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       <div>
         <h2 className="text-lg font-medium tracking-normal text-foreground">Is it correct?</h2>
@@ -323,7 +351,9 @@ function PolicyUpdate() {
               <CardContent className="flex items-start gap-3 pt-6">
                 <item.icon className={cn("mt-0.5 h-5 w-5", item.className)} />
                 <div>
-                  <p className="text-2xl font-mono tabular-nums font-medium text-foreground">{item.count}</p>
+                  <p className="text-2xl font-mono tabular-nums font-medium text-foreground">
+                    {item.count}
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                 </div>
               </CardContent>
@@ -343,10 +373,16 @@ function PolicyUpdate() {
               <span className="text-base font-normal text-muted-foreground"> / claim</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              <span className="font-mono tabular-nums">{IMPACT_STATS.manual.minutesPerClaim}</span> minutes per claim · €
-              <span className="font-mono tabular-nums">{(IMPACT_STATS.manual.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}</span> and{" "}
-              <span className="font-mono tabular-nums">{Math.round((IMPACT_STATS.manual.minutesPerClaim * CLAIMS.length) / 60)}</span> hours for the
-              whole portfolio.
+              <span className="font-mono tabular-nums">{IMPACT_STATS.manual.minutesPerClaim}</span>{" "}
+              minutes per claim · €
+              <span className="font-mono tabular-nums">
+                {(IMPACT_STATS.manual.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}
+              </span>{" "}
+              and{" "}
+              <span className="font-mono tabular-nums">
+                {Math.round((IMPACT_STATS.manual.minutesPerClaim * CLAIMS.length) / 60)}
+              </span>{" "}
+              hours for the whole portfolio.
             </p>
           </CardContent>
         </Card>
@@ -360,9 +396,13 @@ function PolicyUpdate() {
               <span className="text-base font-normal text-muted-foreground"> / claim</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              <span className="font-mono tabular-nums">{IMPACT_STATS.replay.minutesPerClaim}</span> minutes per claim · €
-              <span className="font-mono tabular-nums">{(IMPACT_STATS.replay.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}</span> and
-              under <span className="font-mono tabular-nums">2</span> hours for the whole portfolio.
+              <span className="font-mono tabular-nums">{IMPACT_STATS.replay.minutesPerClaim}</span>{" "}
+              minutes per claim · €
+              <span className="font-mono tabular-nums">
+                {(IMPACT_STATS.replay.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}
+              </span>{" "}
+              and under <span className="font-mono tabular-nums">2</span> hours for the whole
+              portfolio.
             </p>
           </CardContent>
         </Card>
@@ -395,7 +435,10 @@ function PolicyUpdate() {
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                   <DecisionBadge decision={o.newDecision} />
                   <span className="text-muted-foreground">
-                    by {o.reviewer} · <span className="font-mono tabular-nums">{new Date(o.at).toLocaleString("en-GB")}</span>
+                    by {o.reviewer} ·{" "}
+                    <span className="font-mono tabular-nums">
+                      {new Date(o.at).toLocaleString("en-GB")}
+                    </span>
                   </span>
                   <span className="w-full text-xs text-muted-foreground">{o.reason}</span>
                 </li>

@@ -175,7 +175,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         {!collapsed && (
           <div className="border-t border-border px-5 py-4">
-            <p className="font-mono tabular-nums text-xs text-muted-foreground">Policy v1 · v2 preview</p>
+            <TaktileLogo className="size-5 text-muted-foreground" />
           </div>
         )}
       </aside>
