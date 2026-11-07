@@ -7,7 +7,6 @@ import { DecisionBadge } from "@/components/decision-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -102,7 +101,7 @@ function ClaimDetail() {
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Claims Queue
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.5} /> Back to Claims Queue
       </Link>
 
       {closed && (
@@ -116,91 +115,94 @@ function ClaimDetail() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <p className="eyebrow mb-2">CLAIM</p>
             <div>
-              <CardTitle className="font-mono tabular-nums text-2xl">{claim.id}</CardTitle>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="font-mono tabular-nums text-3xl font-medium tracking-tight">{claim.id}</h1>
+                <div className="flex items-center gap-2">
+                  {claimOverrides.length > 0 && <Badge variant="outline" className="rounded-sm border-foreground/20 font-mono text-[10px] uppercase">Overridden</Badge>}
+                  {closed && (
+                    <Badge variant="secondary" className="gap-1 rounded-sm">
+                      <Lock className="h-3 w-3" /> Closed
+                    </Badge>
+                  )}
+                </div>
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {claim.claimant} · <span className="font-mono tabular-nums">€{claim.amountEur.toLocaleString("en-US")}</span> · Rule <span className="font-mono tabular-nums">{claim.rule}</span> (
                 {rule.name})
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              {claimOverrides.length > 0 && <Badge variant="outline">Overridden</Badge>}
-              {closed && (
-                <Badge variant="secondary" className="gap-1">
-                  <Lock className="h-3 w-3" /> Closed
-                </Badge>
-              )}
-            </div>
           </div>
 
           {mode === "compare" ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-lg border border-border bg-muted/40 p-4">
-                <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+              <div className="rounded-lg border border-border bg-card p-5">
+                <p className="eyebrow">
                   Policy v1
                 </p>
                 <div className="mt-2">
                   <DecisionBadge decision={claim.decisionV1} size="lg" />
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">{rule.clauseV1}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{rule.clauseV1}</p>
               </div>
+              <ArrowRight aria-hidden="true" className="h-4 w-4 self-center justify-self-center text-contrast max-sm:rotate-90" strokeWidth={1.5} />
               <div
                 className={
                   changed
-                    ? "rounded-lg border border-decision-specialist/40 bg-decision-specialist/5 p-4"
-                    : "rounded-lg border border-border bg-muted/40 p-4"
+                    ? "rounded-lg border border-contrast/40 bg-card p-5"
+                    : "rounded-lg border border-border bg-card p-5"
                 }
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
+                  <p className="eyebrow">
                     Policy v2
                   </p>
                   {changed && (
-                    <Badge className="border border-decision-specialist/30 bg-decision-specialist/10 text-decision-specialist">
+                    <Badge variant="outline" className="rounded-sm border-contrast/40 font-mono text-[10px] uppercase text-contrast">
                       Changed
                     </Badge>
                   )}
                 </div>
                 <div className="mt-2 flex items-center gap-2">
                   <DecisionBadge decision={claim.decisionV2} size="lg" />
-                  {changed && <ArrowRight className="h-4 w-4 text-decision-specialist" />}
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">{rule.clauseV2}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{rule.clauseV2}</p>
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-border bg-muted/40 p-4">
-              <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="eyebrow">
                 Decision under policy {mode}
               </p>
               <div className="mt-2">
                 <DecisionBadge decision={currentDecision} size="lg" />
               </div>
               <Separator className="my-4" />
-              <p className="text-sm font-medium text-foreground">Decisive fact</p>
+              <p className="eyebrow">Decisive fact</p>
               <p className="mt-1 text-sm text-muted-foreground">{claim.decisiveFact}</p>
-              <p className="mt-3 text-sm font-medium text-foreground">
+              <p className="eyebrow mt-3">
                 Policy clause (<span className="font-mono tabular-nums">{claim.rule}</span>)
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {mode === "v1" ? rule.clauseV1 : rule.clauseV2}
               </p>
             </div>
           )}
 
           {mode === "compare" && (
-            <div className="rounded-lg border border-border p-4">
-              <p className="text-sm font-medium text-foreground">Decisive fact</p>
+            <div>
+              <p className="eyebrow">Decisive fact</p>
               <p className="mt-1 text-sm text-muted-foreground">{claim.decisiveFact}</p>
             </div>
           )}
-        </CardHeader>
-        <CardContent className="space-y-6">
+        </div>
+        <div className="space-y-6">
           <div>
-            <h2 className="text-sm font-medium text-foreground">Explanation</h2>
+            <h2 className="eyebrow">Explanation</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{claim.explanation}</p>
           </div>
 
@@ -208,7 +210,7 @@ function ClaimDetail() {
             <div>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button className="h-9 gap-2 rounded-sm bg-primary text-primary-foreground">
                     <PencilLine className="h-4 w-4" /> Correct decision
                   </Button>
                 </DialogTrigger>
@@ -222,12 +224,12 @@ function ClaimDetail() {
                   </DialogHeader>
                   <div className="space-y-4 py-2">
                     <div className="space-y-2">
-                      <Label>New decision</Label>
+                      <Label htmlFor="override-decision" className="text-xs font-medium text-muted-foreground">New decision</Label>
                       <Select
                         value={newDecision}
                         onValueChange={(v) => setNewDecision(v as Decision)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="override-decision" className="h-9 rounded-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -240,18 +242,20 @@ function ClaimDetail() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="override-reason">Reason</Label>
+                      <Label htmlFor="override-reason" className="text-xs font-medium text-muted-foreground">Reason</Label>
                       <Textarea
                         id="override-reason"
+                        className="h-9 min-h-9 rounded-sm"
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         placeholder="Why is the engine's decision wrong?"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="override-reviewer">Reviewer</Label>
+                      <Label htmlFor="override-reviewer" className="text-xs font-medium text-muted-foreground">Reviewer</Label>
                       <Input
                         id="override-reviewer"
+                        className="h-9 rounded-sm"
                         value={reviewer}
                         onChange={(e) => setReviewer(e.target.value)}
                         placeholder="Your name"
@@ -259,10 +263,10 @@ function ClaimDetail() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    <Button variant="outline" className="h-9 rounded-sm" onClick={() => setDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={saveOverride}>Save correction</Button>
+                    <Button className="h-9 rounded-sm bg-primary text-primary-foreground" onClick={saveOverride}>Save correction →</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -271,27 +275,29 @@ function ClaimDetail() {
 
           {claimOverrides.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-foreground">Override history</h2>
-              <ul className="mt-2 space-y-2">
+              <h2 className="eyebrow">Override history</h2>
+              <ul className="mt-4 ml-1 space-y-6 border-l border-border pl-5">
                 {claimOverrides.map((o) => (
                   <li
                     key={o.id}
-                    className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+                    className="relative space-y-2 text-sm"
                   >
-                    <DecisionBadge decision={o.previousDecision} />
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    <DecisionBadge decision={o.newDecision} />
-                    <span className="text-muted-foreground">
-                      by {o.reviewer} · <span className="font-mono tabular-nums">{new Date(o.at).toLocaleString("en-GB")}</span>
-                    </span>
-                    <span className="w-full text-xs text-muted-foreground">{o.reason}</span>
+                    <span aria-hidden="true" className="absolute top-1 -left-[25px] size-2 rounded-full bg-foreground" />
+                    <p className="font-mono tabular-nums text-xs text-muted-foreground">{new Date(o.at).toLocaleString("en-GB")}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <DecisionBadge decision={o.previousDecision} />
+                      <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 text-contrast" />
+                      <DecisionBadge decision={o.newDecision} />
+                    </div>
+                    <p className="text-sm">{o.reason}</p>
+                    <p className="text-xs text-muted-foreground">by {o.reviewer}</p>
                   </li>
                 ))}
               </ul>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -6,3 +6,7 @@
 # Claims Queue styling
 - [x] Restyle decision badges and queue presentation without changing analysis logic.
 - [x] Verify comparison, filters and claim navigation.
+
+# Claim detail styling
+- [ ] Restyle claim header, comparison, correction dialog and history without changing decisions.
+- [ ] Verify correction saving and comparison views.
