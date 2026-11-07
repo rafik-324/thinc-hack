@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -16,9 +16,10 @@ import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { title: "Claims Queue", url: "/queue", icon: ClipboardList },
-  { title: "Policy Impact", url: "/policy-impact", icon: Gauge },
-];
+  { title: "Overview", tab: "overview", icon: LayoutGrid },
+  { title: "Update", tab: "update", icon: RefreshCw },
+  { title: "History", tab: "history", icon: History },
+] as const;
 
 const VERSION_LABELS: Record<VersionMode, string> = {
   v1: "Policy v1",
@@ -26,10 +27,9 @@ const VERSION_LABELS: Record<VersionMode, string> = {
   compare: "v1 vs v2",
 };
 
-const PANEL_TABS = ["overview", "update", "history"] as const;
 
 function TopBar() {
-  const { mode, setMode, tab, setTab } = usePolicy();
+  const { mode, setMode } = usePolicy();
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
@@ -52,23 +52,6 @@ function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <div className="flex gap-1">
-          {PANEL_TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
-                tab === t
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
         <span className="eyebrow hidden sm:block">Policy Version</span>
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
@@ -99,7 +82,7 @@ function TopBar() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const { tab, setTab } = usePolicy();
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,15 +112,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className={cn("flex-1 space-y-1 py-2", collapsed ? "px-2" : "px-3")}>
           {NAV_ITEMS.map((item) => {
-            const active = currentPath === item.url;
+            const active = tab === item.tab;
             return (
-              <Link
-                key={item.url}
-                to={item.url}
+              <button
+                type="button"
+                key={item.tab}
+                onClick={() => setTab(item.tab)}
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? item.title : undefined}
                 className={cn(
-                  "relative flex items-center gap-3 rounded-sm py-2 text-sm font-medium transition-colors",
+                  "relative flex w-full items-center gap-3 rounded-sm py-2 text-sm font-medium transition-colors",
                   collapsed ? "justify-center px-0" : "px-3",
                   active
                     ? "text-foreground"
@@ -147,7 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
                 <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
                 {!collapsed && item.title}
-              </Link>
+              </button>
             );
           })}
         </nav>
