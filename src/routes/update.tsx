@@ -94,22 +94,19 @@ function PolicyUpdate() {
     prevValue?: string;
   };
 
-  const kpis: Kpi[] = [
+  const kpisBig: Kpi[] = [
     { label: "Total claims", value: String(CLAIMS.length) },
     { label: "Changed by v2", value: String(changedClaims.length) },
-    {
-      label: "Closed changed",
-      value: String(closedChanged),
-      valueClass: "text-decision-fast",
-      hint: "Closed decisions are protected",
-    },
-    { label: "Overrides", value: String(overrides.length) },
     {
       label: "Error rate",
       value: `${IMPACT_STATS.errorRateV2}%`,
       prevValue: `${IMPACT_STATS.errorRateV1}%`,
       valueClass: "text-decision-fast",
     },
+  ];
+
+  const kpisSmall: Kpi[] = [
+    { label: "Overrides", value: String(overrides.length) },
     {
       label: "Savings",
       value: `€${IMPACT_STATS.savingsEur.toLocaleString("en-US")}`,
