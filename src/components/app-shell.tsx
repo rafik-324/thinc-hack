@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge, Scale } from "lucide-react";
+import { ClipboardList, Gauge } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,15 +16,15 @@ const NAV_ITEMS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { mode, setMode } = usePolicy();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const pageName = NAV_ITEMS.find((item) => item.url === currentPath)?.title
+    ?? (currentPath.startsWith("/claims/") ? "Claim Detail" : "Policy Replay");
 
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-20 flex w-56 flex-col border-r border-border bg-card">
-        <div className="flex items-center gap-2 px-5 py-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Scale className="h-4 w-4" />
-          </div>
-          <span className="text-base font-medium tracking-normal text-foreground">Policy Replay</span>
+        <div className="space-y-2 px-5 py-5">
+          <span className="text-lg font-medium tracking-normal text-foreground">Policy Replay</span>
+          <p className="eyebrow">CLAIMS REVIEW</p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-2">
           {NAV_ITEMS.map((item) => {
@@ -33,27 +33,29 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.url}
                 to={item.url}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <item.icon className="h-4 w-4" />
+                {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
+                <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
                 {item.title}
               </Link>
             );
           })}
         </nav>
         <div className="border-t border-border px-5 py-4">
-          <p className="text-xs text-muted-foreground">Claims review prototype</p>
+          <p className="font-mono tabular-nums text-xs text-muted-foreground">Policy v1 · v2 preview</p>
         </div>
       </aside>
 
       <div className="pl-56">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur">
-          <span className="text-sm font-medium text-muted-foreground">Policy Replay</span>
+        <header className="sticky top-0 z-10 flex h-[65px] items-center justify-between border-b border-border bg-background px-6">
+          <span className="eyebrow">{pageName}</span>
           <div className="flex items-center gap-4">
             <ToggleGroup
               type="single"
@@ -62,12 +64,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               variant="outline"
               size="sm"
             >
-              <ToggleGroupItem value="v1">v1</ToggleGroupItem>
-              <ToggleGroupItem value="v2">v2</ToggleGroupItem>
-              <ToggleGroupItem value="compare">Compare</ToggleGroupItem>
+              <ToggleGroupItem value="v1" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">v1</ToggleGroupItem>
+              <ToggleGroupItem value="v2" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">v2</ToggleGroupItem>
+              <ToggleGroupItem value="compare" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">Compare</ToggleGroupItem>
             </ToggleGroup>
-            <Badge variant="secondary" className="border border-decision-specialist/30 bg-decision-specialist/10 text-decision-specialist">
-              Preview
+            <Badge variant="outline" className="eyebrow rounded-sm border-contrast/40 text-contrast">
+              V2 PREVIEW
             </Badge>
           </div>
         </header>
