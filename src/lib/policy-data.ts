@@ -393,7 +393,8 @@ export function decisionMatrix(): number[][] {
   for (const claim of CLAIMS) {
     const row = DECISION_ORDER.indexOf(claim.decisionV1);
     const col = DECISION_ORDER.indexOf(claim.decisionV2);
-    matrix[row][col] += 1;
+    const rowCells = matrix[row];
+    if (rowCells && col >= 0) rowCells[col] = (rowCells[col] ?? 0) + 1;
   }
   return matrix;
 }
