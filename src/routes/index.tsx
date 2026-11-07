@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Scale } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { CLAIMS, isChanged } from "@/lib/policy-data";
 
 export const Route = createFileRoute("/")({
@@ -57,13 +58,14 @@ function LandingPage() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Button asChild size="lg" className="h-12 px-6 text-base">
             <Link
               to="/queue"
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Analyse starten
               <ArrowRight className="h-4 w-4" />
             </Link>
+            </Button>
             <span className="font-mono tabular-nums text-xs text-muted-foreground">
               {CLAIMS.length} claims loaded · {changed} decisions change under v2
             </span>
