@@ -24,3 +24,4 @@
 
 ## Claim card stack
 - [ ] Right claim card as subtle stack (top straight, 2 behind fanned left), scroll cycles through all claims
+- [ ] Claim stack height = sidebar height, smaller gap
