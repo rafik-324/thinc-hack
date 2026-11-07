@@ -137,10 +137,7 @@ function ClaimsQueue() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="rounded-lg border border-border bg-card min-h-80 lg:col-span-1 lg:h-[calc(100vh-108px)] lg:sticky lg:top-[84px] self-start" />
-      </div>
 
       <div className="rounded-lg border border-border bg-card">
         <div className="flex items-start justify-between gap-4 p-5">
@@ -230,6 +227,9 @@ function ClaimsQueue() {
           </TableBody>
         </Table>
       </div>
+      </div>
+        </div>
+        <div className="min-h-80 self-start rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:col-span-1 lg:h-[calc(100vh-108px)]" />
       </div>
     </div>
   );
