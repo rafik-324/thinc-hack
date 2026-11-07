@@ -2,10 +2,10 @@ import { DECISION_LABELS, type Decision } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
 
 const DECISION_CLASSES: Record<Decision, string> = {
-  fast_track: "bg-decision-fast/10 text-decision-fast border-decision-fast/30",
-  standard_review: "bg-decision-standard/10 text-decision-standard border-decision-standard/30",
-  specialist_review: "bg-decision-specialist/10 text-decision-specialist border-decision-specialist/30",
-  reject: "bg-decision-reject/10 text-decision-reject border-decision-reject/30",
+  fast_track: "bg-decision-fast-soft text-decision-fast border-decision-fast-line",
+  standard_review: "bg-decision-standard-soft text-decision-standard border-decision-standard-line",
+  specialist_review: "bg-decision-specialist-soft text-decision-specialist border-decision-specialist-line",
+  reject: "bg-decision-reject-soft text-decision-reject border-decision-reject-line",
 };
 
 export function DecisionBadge({
