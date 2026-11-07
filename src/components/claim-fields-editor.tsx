@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
 type Fields = Record<string, unknown>;
@@ -21,6 +22,44 @@ const isBoolLike = (v: unknown) =>
   typeof v === "boolean" || (typeof v === "string" && /^(true|false)$/i.test(v));
 const show = (v: unknown) => (v === null || v === undefined ? "—" : String(v));
 const label = (k: string) => k.replace(/_/g, " ");
+
+/** Fields with a fixed set of values (from the case data) are edited with a dropdown. */
+const CHOICES: Record<string, string[]> = {
+  case_status: ["open", "closed"],
+  claim_type: ["motor_own_damage", "theft"],
+  repair_type: ["standard", "ev_high_voltage_battery"],
+};
+
+/** Keep an unexpected current value selectable so it is never silently dropped. */
+const withCurrent = (options: string[], current: string | undefined) =>
+  current && !options.includes(current) ? [current, ...options] : options;
+
+function FieldSelect({
+  id,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Select value={value || undefined} onValueChange={onChange}>
+      <SelectTrigger id={id} className="h-9 w-full rounded-sm font-mono text-sm">
+        <SelectValue placeholder="—" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option} value={option} className="font-mono text-sm">
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 /** Restore the original JSON type (number, boolean, "True"/"False" text) of an edited value. */
 function coerce(original: unknown, text: string): unknown {
@@ -104,9 +143,6 @@ export function ClaimFieldsEditor({ caseId, section }: { caseId: string; section
     qc.invalidateQueries({ queryKey: ["live-claims"] });
   };
 
-  const sel =
-    "h-9 w-full rounded-sm border border-input bg-transparent px-3 text-sm text-foreground";
-
   if (section === "fields") return (
         <div className="space-y-3">
           {fieldsQ.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
@@ -117,16 +153,20 @@ export function ClaimFieldsEditor({ caseId, section }: { caseId: string; section
               return (
                 <div key={k} className={`space-y-1.5 ${wide ? "col-span-2" : ""}`}>
                   <label htmlFor={id} className="eyebrow block">{label(k)}</label>
-                  {k === "case_status" ? (
-                    <select id={id} className={sel} value={draft[k] ?? ""} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}>
-                      <option value="open">open</option>
-                      <option value="closed">closed</option>
-                    </select>
+                  {CHOICES[k] ? (
+                    <FieldSelect
+                      id={id}
+                      value={draft[k] ?? ""}
+                      options={withCurrent(CHOICES[k], draft[k])}
+                      onChange={(value) => setDraft({ ...draft, [k]: value })}
+                    />
                   ) : isBoolLike(v) ? (
-                    <select id={id} className={sel} value={(draft[k] ?? "").toLowerCase()} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}>
-                      <option value="true">true</option>
-                      <option value="false">false</option>
-                    </select>
+                    <FieldSelect
+                      id={id}
+                      value={(draft[k] ?? "").toLowerCase()}
+                      options={["true", "false"]}
+                      onChange={(value) => setDraft({ ...draft, [k]: value })}
+                    />
                   ) : (
                     <Input
                       id={id}

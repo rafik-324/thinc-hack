@@ -144,14 +144,14 @@ function PolicyUpdate() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
-            <CardContent className="pt-6">
-              <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
+            <CardContent className="p-4">
+              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
                 {kpi.label}
               </p>
-              <p className={cn("mt-2 text-2xl font-mono tabular-nums font-medium text-foreground", kpi.valueClass)}>
+              <p className={cn("mt-2 text-[2rem] leading-none font-mono tabular-nums font-medium tracking-[-0.02em] text-foreground", kpi.valueClass)}>
                 {kpi.value}
               </p>
-              {kpi.hint && <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>}
+              {kpi.hint && <p className="mt-2 text-[11px] text-muted-foreground">{kpi.hint}</p>}
             </CardContent>
           </Card>
         ))}

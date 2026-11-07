@@ -276,12 +276,12 @@ function ClaimsQueue() {
         >
           {/* Two cards peeking out behind, fanned to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[3.2deg] rounded-lg border border-foreground/25 bg-card opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[3.2deg] rounded-lg border border-foreground/35 bg-card opacity-60" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/25 bg-card opacity-85" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/35 bg-card opacity-85" />
           )}
-          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-top-2 duration-300">
+          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-foreground/25 bg-[oklch(0.15_0_0/0.92)] shadow-[inset_0_1px_0_oklch(1_0_0/0.06)] backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
           </div>
         </div>
@@ -292,13 +292,13 @@ function ClaimsQueue() {
 
 function SmallKpi({ label, value, chip, caption }: { label: string; value: string; chip: string; caption: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">{label}</span>
         <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-foreground">{chip}</span>
       </div>
-      <p className="mt-3 font-mono text-3xl font-medium tabular-nums text-foreground">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{caption}</p>
+      <p className="mt-2 font-mono text-[2.75rem] leading-none font-medium tabular-nums tracking-[-0.02em] text-foreground">{value}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">{caption}</p>
     </div>
   );
 }
