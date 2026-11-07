@@ -186,7 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ref={scrollRef}
           data-at-top={atEdge.top}
           data-at-bottom={atEdge.bottom}
-          className="h-[calc(100vh-72px)] overflow-y-auto pl-3 pr-12 pb-8"
+          className="h-[calc(100vh-72px)] overflow-y-auto pl-3 pr-14 pb-8"
         >
           <div ref={contentRef}>{children}</div>
         </main>

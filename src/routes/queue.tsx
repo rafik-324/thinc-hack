@@ -253,6 +253,8 @@ function ClaimsQueue() {
           className="relative min-h-80 self-start lg:sticky lg:top-3 lg:h-[calc(100vh-96px)]"
           onWheel={(event) => {
             if (!active || rows.length < 2) return;
+            // Never flip to another claim while the card is in edit mode.
+            if (event.currentTarget.querySelector('[data-editing="true"]')) return;
             // Let the card body scroll first; switch claims only at its edge.
             let el = event.target as HTMLElement | null;
             while (el && el !== event.currentTarget) {

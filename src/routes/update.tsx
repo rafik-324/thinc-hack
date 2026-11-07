@@ -66,11 +66,11 @@ export const Route = createFileRoute("/update")({
 });
 
 const HEAT_SHADES = [
-  "bg-muted/30",
-  "bg-decision-standard/15",
-  "bg-decision-standard/35",
-  "bg-decision-standard/60",
-  "bg-decision-standard/85",
+  "bg-foreground/[0.03]",
+  "bg-foreground/[0.06]",
+  "bg-foreground/[0.10]",
+  "bg-foreground/[0.15]",
+  "bg-foreground/[0.21]",
 ];
 
 function PolicyUpdate() {
@@ -196,12 +196,10 @@ function PolicyUpdate() {
                               className={cn(
                                 "flex h-12 items-center justify-center rounded-md text-sm font-mono tabular-nums font-medium",
                                 offDiagonal
-                                  ? "bg-decision-specialist/25 text-decision-specialist"
+                                  ? "bg-foreground/[0.04] ring-1 ring-inset ring-foreground/15"
                                   : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
                                       HEAT_SHADES[0]),
-                                count >= 3 && !offDiagonal
-                                  ? "text-decision-standard-foreground"
-                                  : "text-foreground",
+                                count > 0 ? "text-foreground" : "text-muted-foreground",
                               )}
                             >
                               {count}
@@ -231,6 +229,14 @@ function PolicyUpdate() {
                   data={changedPerRule}
                   margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
                 >
+                  <defs>
+                    {/* Nearly transparent at the base, solid grey at the top of each bar. */}
+                    <linearGradient id="changed-bar-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 1 }} />
+                      <stop offset="25%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0.45 }} />
+                      <stop offset="100%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0 }} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="var(--color-border)"
@@ -264,7 +270,7 @@ function PolicyUpdate() {
                         key={entry.rule}
                         fill={
                           entry.changed > 0
-                            ? "var(--color-decision-standard)"
+                            ? "url(#changed-bar-gradient)"
                             : "var(--color-muted)"
                         }
                       />
@@ -277,7 +283,7 @@ function PolicyUpdate() {
         </Card>
       </div>
 
-      <Collapsible defaultOpen asChild>
+      <Collapsible asChild>
         <Card>
           <CardHeader className="p-0">
             <CollapsibleTrigger className="group flex w-full items-center gap-2 p-6 text-left">
