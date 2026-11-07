@@ -139,7 +139,7 @@ function ClaimsQueue() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card min-h-80 lg:col-span-1" />
+        <div className="rounded-lg border border-border bg-card min-h-80 lg:col-span-1 lg:h-[calc(100vh-108px)] lg:sticky lg:top-[84px] self-start" />
       </div>
 
       <div className="rounded-lg border border-border bg-card">
