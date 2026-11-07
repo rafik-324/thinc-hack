@@ -115,6 +115,29 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         <nav className={cn("flex-1 space-y-1 py-2", collapsed ? "px-2" : "px-3")}>
+          {!collapsed && <p className="eyebrow px-3 pb-1 pt-2">Ansicht</p>}
+          {PANEL_TABS.map((item) => {
+            const active = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                aria-current={active ? "true" : undefined}
+                title={collapsed ? item.label : undefined}
+                className={cn(
+                  "relative flex w-full items-center gap-3 rounded-sm py-2 text-sm font-medium transition-colors",
+                  collapsed ? "justify-center px-0" : "px-3",
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
+                <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
+                {!collapsed && item.label}
+              </button>
+            );
+          })}
+          {!collapsed && <p className="eyebrow px-3 pb-1 pt-4">Seiten</p>}
           {NAV_ITEMS.map((item) => {
             const active = currentPath === item.url;
             return (
