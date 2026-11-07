@@ -28,7 +28,7 @@ function coerce(original: unknown, text: string): unknown {
   if (typeof original === "boolean") return text.toLowerCase() === "true";
   if (typeof original === "string" && /^(true|false)$/i.test(original)) {
     const t = text.toLowerCase() === "true";
-    return original[0] === original[0].toUpperCase() ? (t ? "True" : "False") : String(t);
+    return original.charAt(0) === original.charAt(0).toUpperCase() ? (t ? "True" : "False") : String(t);
   }
   return text;
 }
@@ -75,12 +75,18 @@ export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
   );
 
   const save = async () => {
-    if (!editor.trim()) return toast.error("Bitte deinen Namen angeben.");
+    if (!editor.trim()) {
+      toast.error("Bitte deinen Namen angeben.");
+      return;
+    }
     for (const k of changed) {
       if (typeof original[k] === "number" && !Number.isFinite(Number(draft[k])))
-        return toast.error(`${label(k)} muss eine Zahl sein.`);
+      {
+        toast.error(`${label(k)} muss eine Zahl sein.`);
+        return;
+      }
     }
-    const payload = Object.fromEntries(changed.map((k) => [k, coerce(original[k], draft[k])]));
+    const payload = Object.fromEntries(changed.map((k) => [k, coerce(original[k], draft[k] ?? "")]));
     setSaving(true);
     const { error } = await (supabase.rpc as any)("update_claim_fields", {
       p_case_id: caseId,
@@ -88,7 +94,10 @@ export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
       p_editor: editor.trim(),
     });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`${changed.length} Feld(er) gespeichert.`);
     qc.invalidateQueries({ queryKey: ["claim-fields", caseId] });
     qc.invalidateQueries({ queryKey: ["claim-changes", caseId] });
