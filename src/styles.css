@@ -226,3 +226,9 @@ h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
 .bg-card.border {
   box-shadow: var(--edge-glow);
 }
+
+/* The middle column dissolves softly at its top and bottom edges while scrolling. */
+#app-scroll {
+  mask-image: linear-gradient(to bottom, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+}
