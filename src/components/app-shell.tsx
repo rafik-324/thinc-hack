@@ -45,7 +45,7 @@ function TopBar() {
   return (
     <div className="fixed left-3 right-3 top-3 z-30 flex h-12 items-center justify-between rounded-full border border-border bg-card px-4">
       <Link to="/" className="flex items-center gap-2 pl-1">
-        <span aria-hidden="true" className="size-2 rounded-full bg-contrast" />
+        <span aria-hidden="true" className="size-2 rounded-full bg-contrast shadow-[0_0_10px_var(--contrast)]" />
         <span className="text-sm font-medium tracking-normal text-foreground">
           Policy Replay
         </span>
