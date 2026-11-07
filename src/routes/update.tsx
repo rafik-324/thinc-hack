@@ -139,26 +139,29 @@ function PolicyUpdate() {
       <PolicyUploadBar />
       <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-4">
-              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
+      <Card>
+        <CardContent className="flex flex-wrap items-stretch divide-x divide-border p-0">
+          {kpis.map((kpi) => (
+            <div
+              key={kpi.label}
+              title={kpi.hint}
+              className="min-w-[128px] flex-1 px-4 py-2.5"
+            >
+              <p className="font-mono text-[9px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
                 {kpi.label}
               </p>
               <p
                 className={cn(
-                  "mt-2 text-[2rem] leading-none font-mono tabular-nums font-medium tracking-[-0.02em] text-foreground",
+                  "mt-1 font-mono text-base leading-none tabular-nums font-medium tracking-[-0.02em] text-foreground",
                   kpi.valueClass,
                 )}
               >
                 {kpi.value}
               </p>
-              {kpi.hint && <p className="mt-2 text-[11px] text-muted-foreground">{kpi.hint}</p>}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
