@@ -276,12 +276,12 @@ function ClaimsQueue() {
             if (next !== idx && target) selectClaim(target.id);
           }}
         >
-          {/* Two cards peeking out behind, fanned slightly to the right */}
+          {/* Two cards peeking out behind, fanned to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.8deg] rounded-lg border border-border bg-card opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[2.6deg] rounded-lg border border-border bg-card opacity-50" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.4deg] rounded-lg border border-border bg-card opacity-80" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.3deg] rounded-lg border border-border bg-card opacity-75" />
           )}
           <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
