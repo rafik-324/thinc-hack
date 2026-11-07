@@ -57,7 +57,6 @@ function ClaimsQueue() {
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [changedOnly, setChangedOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "update" | "history">("overview");
 
   const rows = useMemo(() => {
     return CLAIMS.filter((claim) => {
@@ -140,26 +139,7 @@ function ClaimsQueue() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card lg:col-span-3">
-          <div className="flex justify-end gap-1 border-b border-border p-3">
-            {(["overview", "update", "history"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
-                  activeTab === tab
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-          <div className="p-5" />
-        </div>
+        <div className="rounded-lg border border-border bg-card lg:col-span-3" />
       </div>
 
       <div className="rounded-lg border border-border bg-card">

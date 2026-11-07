@@ -243,6 +243,10 @@ export type Database = {
       }
     }
     Functions: {
+      claim_intake_link: {
+        Args: { p_action: string; p_data: Json; p_token: string }
+        Returns: Json
+      }
       reviewer_save_correction: {
         Args: {
           p_case_id: string

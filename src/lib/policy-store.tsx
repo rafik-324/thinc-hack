@@ -11,9 +11,13 @@ export interface Override {
   at: string;
 }
 
+export type PanelTab = "overview" | "update" | "history";
+
 interface PolicyState {
   mode: VersionMode;
   setMode: (mode: VersionMode) => void;
+  tab: PanelTab;
+  setTab: (tab: PanelTab) => void;
   overrides: Override[];
   addOverride: (override: Omit<Override, "id" | "at">) => void;
   overridesFor: (claimId: string) => Override[];
@@ -45,12 +49,15 @@ const SEED_OVERRIDES: Override[] = [
 
 export function PolicyProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<VersionMode>("compare");
+  const [tab, setTab] = useState<PanelTab>("overview");
   const [overrides, setOverrides] = useState<Override[]>(SEED_OVERRIDES);
 
   const value = useMemo<PolicyState>(
     () => ({
       mode,
       setMode,
+      tab,
+      setTab,
       overrides,
       addOverride: (override) =>
         setOverrides((prev) => [
@@ -64,7 +71,7 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
         return version === "v1" ? claim.decisionV1 : claim.decisionV2;
       },
     }),
-    [mode, overrides],
+    [mode, tab, overrides],
   );
 
   return <PolicyContext.Provider value={value}>{children}</PolicyContext.Provider>;
