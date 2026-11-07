@@ -124,29 +124,6 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
           <div className="mt-2">
             <DecisionBadge decision={currentDecision} size="lg" />
           </div>
-          <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-            {mode === "v1" ? rule.clauseV1 : rule.clauseV2}
-          </p>
-          {changed && (
-            <p className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
-              <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-contrast" strokeWidth={1.5} />
-              <span>
-                Changes under the other policy version — see the Update page for the comparison.
-              </span>
-            </p>
-          )}
-        </div>
-
-        <div>
-          <p className="eyebrow">Decisive fact</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{claim.decisiveFact}</p>
-        </div>
-
-        <div>
-          <p className="eyebrow">Explanation</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-            {claim.explanation}
-          </p>
         </div>
 
         {claimOverrides.length > 0 && (
