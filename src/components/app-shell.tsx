@@ -143,7 +143,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className={cn("overflow-x-clip pt-[72px] transition-all duration-200", collapsed ? "pl-[88px]" : "pl-[248px]")}>
-        <main className="px-3 pb-3">{children}</main>
+        <main className="pl-3 pr-12 pb-8">{children}</main>
       </div>
     </div>
   );
