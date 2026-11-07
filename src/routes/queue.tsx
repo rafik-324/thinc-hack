@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
@@ -82,6 +82,7 @@ function ClaimsQueue() {
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
+  const wheelLock = useRef(0);
   const active = rows.find((c) => c.id === selectedClaimId) ?? rows[0];
 
   const total = CLAIMS.length;
@@ -95,9 +96,9 @@ function ClaimsQueue() {
   const maxCount = Math.max(1, ...decisionCounts.flatMap((x) => [x.v1, x.v2]));
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
-        <div className="grid min-w-0 grid-cols-1 content-start gap-4">
+    <div className="space-y-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-3">
+        <div className="grid min-w-0 grid-cols-1 content-start gap-3">
           <div className="grid gap-4 sm:grid-cols-2">
             <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
             <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
@@ -250,8 +251,41 @@ function ClaimsQueue() {
       </div>
       </div>
         </div>
-        <div className="min-h-80 self-start overflow-hidden rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]">
-          {active ? <ClaimDetailPanel claim={active} /> : null}
+        <div
+          className="relative min-h-80 self-start lg:sticky lg:top-[72px] lg:h-[calc(100vh-84px)]"
+          onWheel={(event) => {
+            if (!active || rows.length < 2) return;
+            // Let the card body scroll first; switch claims only at its edge.
+            let el = event.target as HTMLElement | null;
+            while (el && el !== event.currentTarget) {
+              const oy = getComputedStyle(el).overflowY;
+              if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight) {
+                const atTop = el.scrollTop <= 0;
+                const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+                if ((event.deltaY > 0 && !atBottom) || (event.deltaY < 0 && !atTop)) return;
+                break;
+              }
+              el = el.parentElement;
+            }
+            const now = Date.now();
+            if (now - wheelLock.current < 450 || Math.abs(event.deltaY) < 8) return;
+            wheelLock.current = now;
+            const idx = rows.findIndex((c) => c.id === active.id);
+            const next = Math.min(rows.length - 1, Math.max(0, idx + (event.deltaY > 0 ? 1 : -1)));
+            const target = rows[next];
+            if (next !== idx && target) selectClaim(target.id);
+          }}
+        >
+          {/* Two cards peeking out behind, fanned slightly to the right */}
+          {rows.length > 2 && (
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.8deg] rounded-lg border border-border bg-card opacity-60" />
+          )}
+          {rows.length > 1 && (
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.4deg] rounded-lg border border-border bg-card opacity-80" />
+          )}
+          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {active ? <ClaimDetailPanel claim={active} /> : null}
+          </div>
         </div>
       </div>
     </div>
