@@ -142,9 +142,9 @@ function ClaimsQueue() {
               Click a claim to open it · <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{total}</span> · policy <span className="font-mono">{mode}</span>
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
             <Select value={decisionFilter} onValueChange={(v) => setDecisionFilter(v as Decision | "all")}>
-              <SelectTrigger aria-label="Filter by decision" className="h-8 w-44 rounded-sm text-xs">
+              <SelectTrigger aria-label="Filter by decision" className="h-8 w-40 rounded-sm text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -161,7 +161,7 @@ function ClaimsQueue() {
                   type="button"
                   onClick={() => setStatusFilter(s)}
                   className={cn(
-                    "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
+                    "h-8 rounded-sm border px-2.5 font-mono text-xs capitalize",
                     statusFilter === s ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
