@@ -114,11 +114,12 @@
   --accent-foreground: oklch(0.88 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
-  --border: oklch(0.25 0 0);
-  --input: oklch(0.27 0 0);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.32 0 0);
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
@@ -167,11 +168,12 @@
   --accent-foreground: oklch(0.88 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
-  --border: oklch(0.25 0 0);
-  --input: oklch(0.27 0 0);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.32 0 0);
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
@@ -218,3 +220,11 @@
 
 html { color-scheme: dark; }
 h1, h2, .text-glow { text-shadow: 0 0 18px oklch(1 0 0 / 0.08); }
+
+/* Glowing edges: every bordered surface and small control carries a soft rim light. */
+.bg-card.border {
+  box-shadow: var(--edge-glow);
+}
+.rounded-sm.border:not([class*="border-decision"]) {
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08), 0 0 9px oklch(1 0 0 / 0.08);
+}
