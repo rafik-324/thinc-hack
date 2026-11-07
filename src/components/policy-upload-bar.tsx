@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { usePolicies, useUploadPolicy } from "@/lib/policies";
+import { POLICY_FILE_ACCEPT, POLICY_FILE_HINT } from "@/lib/policy-file";
 import { cn } from "@/lib/utils";
-
-const ACCEPT = "*/*";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -25,7 +24,7 @@ export function PolicyUploadBar() {
   const [dragging, setDragging] = useState(false);
   const [open, setOpen] = useState(true);
 
-  const taken = policies.some((p) => p.version === version.trim());
+  const taken = policies.some((p) => p.version === version.trim() && p.has_content);
   const canSubmit = !!file && version.trim() && name.trim() && !taken && !upload.isPending;
 
   const pickFile = (f: File | null) => {
@@ -138,7 +137,7 @@ export function PolicyUploadBar() {
                 </span>
               ) : (
                 <span className="font-mono text-[9px] tracking-[0.04em] text-muted-foreground uppercase">
-                  .txt .md .json .yaml .csv
+                  {POLICY_FILE_HINT}
                 </span>
               )}
             </button>
@@ -185,7 +184,7 @@ export function PolicyUploadBar() {
       <input
         ref={fileRef}
         type="file"
-        accept={ACCEPT}
+        accept={POLICY_FILE_ACCEPT}
         className="hidden"
         onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
       />
