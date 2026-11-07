@@ -384,7 +384,7 @@ export function isChanged(claim: Claim): boolean {
 }
 
 export function getRule(ruleId: string): Rule {
-  return RULES.find((r) => r.id === ruleId) ?? RULES[RULES.length - 1];
+  return RULES.find((r) => r.id === ruleId) ?? RULES[RULES.length - 1]!;
 }
 
 /** v1 rows x v2 columns decision matrix for the heatmap. */
