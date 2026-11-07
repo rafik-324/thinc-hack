@@ -33,7 +33,6 @@ import {
   type Decision,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-context";
-import { cn } from "@/lib/utils";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
@@ -41,7 +40,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const claimOverrides = overridesFor(claim.id);
   const changed = isChanged(claim);
   const closed = claim.status === "closed";
-  const currentDecision = effectiveDecision(claim, mode === "v1" ? "v1" : "v2");
+  const currentDecision = effectiveDecision(claim, mode);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newDecision, setNewDecision] = useState<Decision>("standard_review");
@@ -117,54 +116,23 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
       </div>
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-        {mode === "compare" ? (
-          <div className="space-y-2">
-            <p className="eyebrow">Decision v1 → v2</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-lg border border-border bg-card p-4">
-                <p className="eyebrow">Policy v1</p>
-                <div className="mt-2">
-                  <DecisionBadge decision={claim.decisionV1} />
-                </div>
-                <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-                  {rule.clauseV1}
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "rounded-lg border bg-card p-4",
-                  changed ? "border-contrast/40" : "border-border",
-                )}
-              >
-                <p className="eyebrow">Policy v2</p>
-                <div className="mt-2">
-                  <DecisionBadge decision={claim.decisionV2} />
-                </div>
-                <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-                  {rule.clauseV2}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="eyebrow">Decision under policy {mode}</p>
+          <div className="mt-2">
+            <DecisionBadge decision={currentDecision} size="lg" />
+          </div>
+          <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
+            {mode === "v1" ? rule.clauseV1 : rule.clauseV2}
+          </p>
+          {changed && (
+            <p className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-contrast" strokeWidth={1.5} />
               <span>
-                {changed
-                  ? `Decision changes from ${DECISION_LABELS[claim.decisionV1]} to ${DECISION_LABELS[claim.decisionV2]}.`
-                  : "No change between policy versions."}
+                Changes under the other policy version — see the Update page for the comparison.
               </span>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="eyebrow">Decision under policy {mode}</p>
-            <div className="mt-2">
-              <DecisionBadge decision={currentDecision} size="lg" />
-            </div>
-            <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-              {mode === "v1" ? rule.clauseV1 : rule.clauseV2}
             </p>
-          </div>
-        )}
+          )}
+        </div>
 
         <div>
           <p className="eyebrow">Decisive fact</p>

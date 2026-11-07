@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { VersionMode } from "@/lib/policy-data";
-import { PolicyContext, type Override, type PanelTab, type PolicyState } from "@/lib/policy-context";
+import { PolicyContext, type Override, type PolicyState } from "@/lib/policy-context";
 
 const SEED_OVERRIDES: Override[] = [
   {
@@ -24,8 +24,7 @@ const SEED_OVERRIDES: Override[] = [
 ];
 
 export function PolicyProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<VersionMode>("compare");
-  const [tab, setTab] = useState<PanelTab>("overview");
+  const [mode, setMode] = useState<VersionMode>("v2");
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Override[]>(SEED_OVERRIDES);
 
@@ -33,8 +32,6 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
     () => ({
       mode,
       setMode,
-      tab,
-      setTab,
       selectedClaimId,
       selectClaim: setSelectedClaimId,
       overrides,
@@ -50,7 +47,7 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
         return version === "v1" ? claim.decisionV1 : claim.decisionV2;
       },
     }),
-    [mode, tab, selectedClaimId, overrides],
+    [mode, selectedClaimId, overrides],
   );
 
   return <PolicyContext.Provider value={value}>{children}</PolicyContext.Provider>;

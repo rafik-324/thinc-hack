@@ -41,26 +41,26 @@ import {
 import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/policy-impact")({
+export const Route = createFileRoute("/update")({
   head: () => ({
     meta: [
-      { title: "Policy Impact — Policy Replay" },
+      { title: "Policy Update — Policy Replay" },
       {
         name: "description",
         content:
-          "See how policy v2 changes claim decisions compared to v1: KPIs, decision heatmap and audit trail.",
+          "Compare policy v1 against v2: KPIs, decision heatmap, changed claims and audit trail.",
       },
-      { property: "og:title", content: "Policy Impact — Policy Replay" },
+      { property: "og:title", content: "Policy Update — Policy Replay" },
       {
         property: "og:description",
         content:
-          "See how policy v2 changes claim decisions compared to v1: KPIs, decision heatmap and audit trail.",
+          "Compare policy v1 against v2: KPIs, decision heatmap, changed claims and audit trail.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: PolicyImpact,
+  component: PolicyUpdate,
 });
 
 const HEAT_SHADES = [
@@ -71,7 +71,7 @@ const HEAT_SHADES = [
   "bg-decision-standard/85",
 ];
 
-function PolicyImpact() {
+function PolicyUpdate() {
   const { overrides } = usePolicy();
   const changedClaims = CLAIMS.filter(isChanged);
   const closedChanged = changedClaims.filter((c) => c.status === "closed").length;
@@ -134,7 +134,8 @@ function PolicyImpact() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Impact</h1>
+        <p className="eyebrow mb-1.5">Policy v1 → v2</p>
+        <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           What changes when the claims portfolio is replayed under policy v2 instead of v1.
         </p>

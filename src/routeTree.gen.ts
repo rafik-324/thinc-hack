@@ -10,17 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PolicyImpactRouteImport } from './routes/policy-impact'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as QueueRouteImport } from './routes/queue'
+import { Route as UpdateRouteImport } from './routes/update'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PolicyImpactRoute = PolicyImpactRouteImport.update({
-  id: '/policy-impact',
-  path: '/policy-impact',
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QueueRoute = QueueRouteImport.update({
@@ -28,35 +29,44 @@ const QueueRoute = QueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpdateRoute = UpdateRouteImport.update({
+  id: '/update',
+  path: '/update',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/policy-impact': typeof PolicyImpactRoute
+  '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/update': typeof UpdateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/policy-impact': typeof PolicyImpactRoute
+  '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/update': typeof UpdateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/policy-impact': typeof PolicyImpactRoute
+  '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/update': typeof UpdateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/policy-impact' | '/queue'
+  fullPaths: '/' | '/history' | '/queue' | '/update'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/policy-impact' | '/queue'
-  id: '__root__' | '/' | '/policy-impact' | '/queue'
+  to: '/' | '/history' | '/queue' | '/update'
+  id: '__root__' | '/' | '/history' | '/queue' | '/update'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PolicyImpactRoute: typeof PolicyImpactRoute
+  HistoryRoute: typeof HistoryRoute
   QueueRoute: typeof QueueRoute
+  UpdateRoute: typeof UpdateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +78,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/policy-impact': {
-      id: '/policy-impact'
-      path: '/policy-impact'
-      fullPath: '/policy-impact'
-      preLoaderRoute: typeof PolicyImpactRouteImport
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/queue': {
@@ -82,13 +92,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QueueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/update': {
+      id: '/update'
+      path: '/update'
+      fullPath: '/update'
+      preLoaderRoute: typeof UpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PolicyImpactRoute: PolicyImpactRoute,
+  HistoryRoute: HistoryRoute,
   QueueRoute: QueueRoute,
+  UpdateRoute: UpdateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

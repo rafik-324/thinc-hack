@@ -11,13 +11,9 @@ export interface Override {
   at: string;
 }
 
-export type PanelTab = "overview" | "update" | "history";
-
 export interface PolicyState {
   mode: VersionMode;
   setMode: (mode: VersionMode) => void;
-  tab: PanelTab;
-  setTab: (tab: PanelTab) => void;
   selectedClaimId: string | null;
   selectClaim: (claimId: string | null) => void;
   overrides: Override[];
