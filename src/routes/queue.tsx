@@ -85,8 +85,8 @@ function ClaimsQueue() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="grid min-w-0 content-start gap-4 lg:col-span-2">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
+        <div className="grid min-w-0 content-start gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
             <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
@@ -229,7 +229,7 @@ function ClaimsQueue() {
       </div>
       </div>
         </div>
-        <div className="min-h-80 self-start rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:col-span-1 lg:h-[calc(100vh-108px)]" />
+        <div className="min-h-80 self-start rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]" />
       </div>
     </div>
   );
