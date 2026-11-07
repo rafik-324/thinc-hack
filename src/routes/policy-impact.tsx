@@ -284,8 +284,8 @@ function PolicyImpact() {
               <TableRow key={claim.id}>
                 <TableCell>
                   <Link
-                    to="/claims/$claimId"
-                    params={{ claimId: claim.id }}
+                    to="/queue"
+                    search={{ claim: claim.id }}
                     className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {claim.id}
@@ -374,7 +374,7 @@ function PolicyImpact() {
         <CardContent>
           {overrides.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No overrides yet. Correct a decision on a claim detail page to see it here.
+              No overrides yet. Correct a decision in the claim card to see it here.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -384,8 +384,8 @@ function PolicyImpact() {
                   className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
                 >
                   <Link
-                    to="/claims/$claimId"
-                    params={{ claimId: o.claimId }}
+                    to="/queue"
+                    search={{ claim: o.claimId }}
                     className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {o.claimId}
