@@ -8,7 +8,7 @@ const DECISION_CLASSES: Record<Decision, string> = {
   reject: "bg-decision-reject-soft text-decision-reject border-decision-reject-line",
   routine_processing: "bg-decision-fast-soft text-decision-fast border-decision-fast-line",
   request_information: "bg-decision-standard-soft text-decision-standard border-decision-standard-line",
-  human_review: "bg-decision-specialist-soft text-decision-specialist border-decision-specialist-line",
+  human_review: "bg-decision-human-soft text-decision-human border-decision-human-line",
 };
 
 export function DecisionBadge({
