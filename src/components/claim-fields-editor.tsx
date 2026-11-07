@@ -33,7 +33,7 @@ function coerce(original: unknown, text: string): unknown {
   return text;
 }
 
-export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
+export function ClaimFieldsEditor({ caseId, section }: { caseId: string; section: "fields" | "history" }) {
   const qc = useQueryClient();
   const fieldsQ = useQuery({
     queryKey: ["claim-fields", caseId],
@@ -107,14 +107,8 @@ export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
   const sel =
     "h-9 w-full rounded-sm border border-input bg-transparent px-3 text-sm text-foreground";
 
-  return (
-    <div className="space-y-4">
-      <details className="group rounded-lg border border-border">
-        <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm font-medium text-foreground">
-          <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" strokeWidth={1.5} />
-          Edit claim fields
-        </summary>
-        <div className="space-y-3 border-t border-border p-3">
+  if (section === "fields") return (
+        <div className="space-y-3">
           {fieldsQ.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(original).map(([k, v]) => {
@@ -156,8 +150,9 @@ export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
             </Button>
           </div>
         </div>
-      </details>
+  );
 
+  return (
       <details className="group rounded-lg border border-border">
         <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm font-medium text-foreground">
           <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" strokeWidth={1.5} />
@@ -189,6 +184,5 @@ export function ClaimFieldsEditor({ caseId }: { caseId: string }) {
           )}
         </div>
       </details>
-    </div>
   );
 }
