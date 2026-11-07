@@ -98,12 +98,29 @@ function ClaimsQueue() {
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
         <div className="grid min-w-0 grid-cols-1 content-start gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
-            <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
-          </div>
+          {/* First three cards lie in a subtle fan over each other */}
+          <div className="relative">
+            <KpiCard
+              className="relative z-30 -translate-x-[2px] -rotate-[0.5deg] pb-8"
+              label="Claims in queue"
+              value={total}
+              chip={`${openCount} open`}
+              caption="Decided by the rules engine"
+              bars={decisionCounts.map((x) => x.v1)}
+              max={maxCount}
+            />
+            <KpiCard
+              className="relative z-20 -mt-4 translate-x-[3px] rotate-[0.4deg] pb-8"
+              label="Changed by v2"
+              value={changedCount}
+              chip={`${Math.round((changedCount / total) * 100)}%`}
+              caption="Decision differs between v1 and v2"
+              bars={decisionCounts.map((x) => x.v2)}
+              max={maxCount}
+              accent
+            />
 
-          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="relative z-10 -mt-4 -translate-x-[1px] -rotate-[0.3deg] rounded-lg border border-border bg-card p-5 pb-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-medium text-foreground">Queue filters</h2>
@@ -259,9 +276,9 @@ function ClaimsQueue() {
   );
 }
 
-function KpiCard({ label, value, chip, caption, bars, max, accent }: { label: string; value: number; chip: string; caption: string; bars: number[]; max: number; accent?: boolean }) {
+function KpiCard({ label, value, chip, caption, bars, max, accent, className }: { label: string; value: number; chip: string; caption: string; bars: number[]; max: number; accent?: boolean; className?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className={cn("rounded-lg border border-border bg-card p-5", className)}>
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tabular-nums", accent ? "border-contrast/40 text-contrast" : "border-border text-foreground")}>{chip}</span>
