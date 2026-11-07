@@ -42,6 +42,7 @@ import {
   isChanged,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-store";
+import { useDbImpact } from "@/lib/db-impact";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/update")({
@@ -76,6 +77,7 @@ const HEAT_SHADES = [
 
 function PolicyUpdate() {
   const { overrides } = usePolicy();
+  const { data: impact } = useDbImpact();
   const changedClaims = CLAIMS.filter(isChanged);
   const matrix = decisionMatrix();
 
@@ -93,23 +95,27 @@ function PolicyUpdate() {
     prevValue?: string;
   };
 
+  const fmtRate = (r: number | null | undefined) => (r == null ? "—" : `${r.toFixed(1)}%`);
+  const v1 = impact?.versions.get("v1");
+  const v2 = impact?.versions.get("v2");
+  const latest = v2 ?? v1;
+  const savings = latest && impact ? latest.automated * impact.perClaim : null;
+
   const kpisBig: Kpi[] = [
     { label: "Total claims", value: String(CLAIMS.length) },
     { label: "Changed by v2", value: String(changedClaims.length) },
     {
       label: "Error rate",
-      value: `${IMPACT_STATS.errorRateV2}%`,
-      prevValue: `${IMPACT_STATS.errorRateV1}%`,
+      value: fmtRate(latest?.errorRate),
+      ...(v2 && v1 ? { prevValue: fmtRate(v1.errorRate) } : {}),
       valueClass: "text-decision-fast",
+      hint: latest ? `${latest.wrong} of ${latest.validated} validated decisions (policy ${latest.version}) differ from the expected outcome` : "Loading…",
     },
-  ];
-
-  const kpisSmall: Kpi[] = [
-    { label: "Overrides", value: String(overrides.length) },
     {
       label: "Savings",
-      value: `€${IMPACT_STATS.savingsEur.toLocaleString("en-US")}`,
+      value: savings == null ? "—" : `€${savings.toLocaleString("en-US")}`,
       valueClass: "text-decision-fast",
+      hint: latest && impact ? `${latest.automated} automated decisions × €${impact.perClaim} saved per claim` : "Loading…",
     },
   ];
 
@@ -174,30 +180,6 @@ function PolicyUpdate() {
                 ) : (
                   kpi.value
                 )}
-              </p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="flex flex-wrap items-stretch divide-x divide-border p-0">
-          {kpisSmall.map((kpi) => (
-            <div
-              key={kpi.label}
-              title={kpi.hint}
-              className="group/kpi min-w-[140px] flex-1 px-4 py-2.5"
-            >
-              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase whitespace-nowrap">
-                {kpi.label}
-              </p>
-              <p
-                className={cn(
-                  "mt-1 font-mono text-base leading-none tabular-nums font-medium tracking-[-0.02em] text-foreground",
-                  kpi.valueClass,
-                )}
-              >
-                {kpi.value}
               </p>
             </div>
           ))}
