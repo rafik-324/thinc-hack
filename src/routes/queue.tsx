@@ -85,9 +85,9 @@ function ClaimsQueue() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="grid gap-4 lg:col-span-2">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="grid content-start gap-4 lg:col-span-2">
+          <div className="grid gap-4">
             <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
             <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
           </div>
@@ -139,28 +139,7 @@ function ClaimsQueue() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
-          <h2 className="text-lg font-medium text-foreground">Decision mix</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Claims per decision, v1 → v2</p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {decisionCounts.map(({ d, v1, v2 }) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDecisionFilter(decisionFilter === d ? "all" : d)}
-                className={cn(
-                  "flex flex-col items-start gap-3 rounded-md border p-4 text-left transition-colors",
-                  decisionFilter === d ? "border-foreground" : "border-border hover:border-foreground/40",
-                )}
-              >
-                <DecisionBadge decision={d} />
-                <span className="font-mono text-xl tabular-nums text-foreground">
-                  {v1} <span className="text-contrast">→</span> {v2}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <div className="rounded-lg border border-border bg-card lg:col-span-3" />
       </div>
 
       <div className="rounded-lg border border-border bg-card">
