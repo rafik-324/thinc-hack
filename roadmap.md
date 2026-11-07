@@ -21,3 +21,6 @@
 - [x] Remove the separate claim page: the card is the only claim view, correction dialog moved into it.
 - [x] Verify row click, default selection, correction saving and the impact-page jump to a claim.
 - [x] Every claim function lives in the card: comparison, decisive fact, explanation, correction, history.
+
+## Claim card stack
+- [ ] Right claim card as subtle stack (top straight, 2 behind fanned left), scroll cycles through all claims
