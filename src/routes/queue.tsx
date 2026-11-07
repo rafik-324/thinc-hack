@@ -296,7 +296,7 @@ function ClaimsQueue() {
           {rows.length > 1 && (
             <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/25 bg-card opacity-85" />
           )}
-          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-top-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
           </div>
         </div>
