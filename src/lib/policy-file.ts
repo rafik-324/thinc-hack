@@ -1,31 +1,35 @@
 /**
  * Turns an uploaded policy file into plain text, one paragraph per line.
- * .docx is unzipped in the browser (word/document.xml); text formats are read as UTF-8.
+ * .docx is unzipped in the browser (word/document.xml), .pdf is read with pdf.js (loaded on demand),
+ * text formats are read as UTF-8.
  * Anything binary is rejected instead of being stored as garbage.
  */
 
-export const POLICY_FILE_ACCEPT = ".docx,.txt,.md,.json,.yaml,.yml,.csv";
-export const POLICY_FILE_HINT = ".docx .txt .md .json .yaml .csv";
+export const POLICY_FILE_ACCEPT = ".docx,.pdf,.txt,.md,.json,.yaml,.yml,.csv";
+export const POLICY_FILE_HINT = ".docx .pdf .txt .md .json .yaml .csv";
 
 export class PolicyFileError extends Error {}
 
 export async function readPolicyFile(file: File): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
+  const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
   let text: string;
-  if (isZip) {
+  if (isPdf) {
+    text = await pdfToText(bytes);
+  } else if (isZip) {
     const xml = await unzipEntry(bytes, "word/document.xml");
     if (xml == null) throw new PolicyFileError("This archive is not a Word document (.docx).");
     text = docxXmlToText(xml);
   } else {
     if (/\.(doc|pdf|odt|rtf|pages)$/i.test(file.name))
-      throw new PolicyFileError("Please upload the policy as .docx or plain text.");
+      throw new PolicyFileError("Please upload the policy as .docx, .pdf or plain text.");
     text = new TextDecoder("utf-8").decode(bytes);
     if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
     const bad = [...text].some((c) => c === "\u0000" || c === "\ufffd");
     if (bad)
       throw new PolicyFileError(
-        "The file is not readable text. Please upload .docx or plain text.",
+        "The file is not readable text. Please upload .docx, .pdf or plain text.",
       );
   }
   text = text
@@ -35,6 +39,63 @@ export async function readPolicyFile(file: File): Promise<string> {
     .trim();
   if (!text) throw new PolicyFileError("The file contains no text.");
   return text;
+}
+
+type PdfItem = { str: string; hasEOL?: boolean; height?: number; transform?: number[] };
+
+/** Joins a PDF text layer into paragraphs: wrapped lines are merged, a new paragraph starts
+ *  at a larger vertical gap, a change in font size (headings) or a numbered item ("1. "). */
+export async function pdfToText(bytes: Uint8Array): Promise<string> {
+  const pdfjs = await import("pdfjs-dist");
+  if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = (
+      await import("pdfjs-dist/build/pdf.worker.min.mjs?url")
+    ).default;
+  }
+  let doc;
+  try {
+    doc = await pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
+  } catch {
+    throw new PolicyFileError("The PDF could not be read.");
+  }
+  const paragraphs: string[] = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    const page = await doc.getPage(n);
+    const items = (await page.getTextContent()).items as PdfItem[];
+    // Collect visual lines with their baseline y and font size.
+    const lines: { text: string; y: number; size: number }[] = [];
+    let cur = { text: "", y: NaN, size: 0 };
+    for (const it of items) {
+      if (Number.isNaN(cur.y) && it.transform)
+        cur = { ...cur, y: it.transform[5] ?? NaN, size: it.height ?? 0 };
+      cur.text += it.str;
+      if (it.height) cur.size = Math.max(cur.size, it.height);
+      if (it.hasEOL) {
+        if (cur.text.trim()) lines.push({ ...cur, text: cur.text.trim() });
+        cur = { text: "", y: NaN, size: 0 };
+      }
+    }
+    if (cur.text.trim()) lines.push({ ...cur, text: cur.text.trim() });
+    let para = "";
+    lines.forEach((line, i) => {
+      const prev = lines[i - 1];
+      const gap = prev ? prev.y - line.y : 0;
+      const newPara =
+        !prev ||
+        Math.abs(line.size - prev.size) > 0.5 ||
+        gap > Math.max(line.size, prev.size) * 1.6 ||
+        /^\d+\.\s/.test(line.text);
+      if (newPara) {
+        if (para) paragraphs.push(para);
+        para = line.text;
+      } else {
+        para += (para.endsWith("-") ? "" : " ") + line.text;
+      }
+    });
+    if (para) paragraphs.push(para);
+  }
+  await doc.destroy();
+  return paragraphs.join("\n");
 }
 
 /** Paragraphs of a WordprocessingML body as lines; tabs and line breaks kept. */
