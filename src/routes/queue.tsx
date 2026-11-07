@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
@@ -33,6 +33,9 @@ import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
+  validateSearch: (search: Record<string, unknown>): { claim?: string } => ({
+    claim: typeof search.claim === "string" ? search.claim : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Claims Queue — Policy Replay" },
@@ -53,11 +56,15 @@ export const Route = createFileRoute("/queue")({
 });
 
 function ClaimsQueue() {
-  const { mode, effectiveDecision, overrides } = usePolicy();
+  const { mode, effectiveDecision, overrides, selectedClaimId, selectClaim } = usePolicy();
+  const search = Route.useSearch();
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [changedOnly, setChangedOnly] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (search.claim) selectClaim(search.claim);
+  }, [search.claim, selectClaim]);
 
   const rows = useMemo(() => {
     return CLAIMS.filter((claim) => {
@@ -74,7 +81,7 @@ function ClaimsQueue() {
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
-  const active = rows.find((c) => c.id === selectedId) ?? rows[0];
+  const active = rows.find((c) => c.id === selectedClaimId) ?? rows[0];
 
   const total = CLAIMS.length;
   const changedCount = CLAIMS.filter(isChanged).length;
@@ -185,11 +192,11 @@ function ClaimsQueue() {
                       !changed &&
                       "data-[state=selected]:shadow-[inset_3px_0_0_var(--foreground)]",
                   )}
-                  onClick={() => setSelectedId(claim.id)}
+                  onClick={() => selectClaim(claim.id)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setSelectedId(claim.id);
+                      selectClaim(claim.id);
                     }
                   }}
                 >
