@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -80,9 +80,7 @@ function TopBar() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [currentPath, setCurrentPath] = useState("");
-
-  useEffect(() => setCurrentPath(window.location.pathname), []);
+  const currentPath = useRouterState({ select: (r) => r.location.pathname });
 
   return (
     <div className="min-h-screen bg-background">
