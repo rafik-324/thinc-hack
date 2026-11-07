@@ -186,7 +186,7 @@ function PolicyImpact() {
                         {DECISION_LABELS[rowDecision]}
                       </td>
                       {DECISION_ORDER.map((colDecision, col) => {
-                        const count = matrix[row][col];
+                        const count = matrix[row]?.[col] ?? 0;
                         const offDiagonal = row !== col && count > 0;
                         return (
                           <td key={colDecision} className="p-1">
@@ -195,7 +195,8 @@ function PolicyImpact() {
                                 "flex h-12 items-center justify-center rounded-md text-sm font-semibold",
                                 offDiagonal
                                   ? "bg-decision-specialist/25 text-decision-specialist"
-                                  : HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)],
+                                  : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
+                                    HEAT_SHADES[0]),
                                 count >= 3 && !offDiagonal
                                   ? "text-decision-standard-foreground"
                                   : "text-foreground",
