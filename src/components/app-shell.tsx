@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { ArrowRightLeft, History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
