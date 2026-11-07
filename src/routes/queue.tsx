@@ -88,7 +88,8 @@ function ClaimsQueue() {
     if (!el) return;
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      window.scrollBy({ top: event.deltaY * 0.3 });
+      const scroller = document.getElementById("app-scroll");
+      (scroller ?? window).scrollBy({ top: event.deltaY * 0.3 });
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
@@ -247,7 +248,7 @@ function ClaimsQueue() {
       </div>
         </div>
         <div
-          className="relative min-h-80 self-start lg:sticky lg:top-[72px] lg:h-[calc(100vh-84px)]"
+          className="relative min-h-80 self-start lg:sticky lg:top-3 lg:h-[calc(100vh-96px)]"
           onWheel={(event) => {
             if (!active || rows.length < 2) return;
             // Let the card body scroll first; switch claims only at its edge.

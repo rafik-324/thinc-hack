@@ -33,7 +33,6 @@ import {
   type Decision,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-context";
-import { cn } from "@/lib/utils";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
