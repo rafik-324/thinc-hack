@@ -15,3 +15,9 @@
 - [x] Add a floating pill bar above the app: logo left, policy version field and Update button right.
 - [x] Verify the bar floats clear of the sidebar and that Update applies the chosen version.
 - [x] Queue: right card full height, wider
+
+# Claim detail in the queue card
+- [x] Show the selected claim in the card: default the top row of the table, click a row to switch.
+- [x] Remove the separate claim page: the card is the only claim view, correction dialog moved into it.
+- [x] Verify row click, default selection, correction saving and the impact-page jump to a claim.
+- [x] Every claim function lives in the card: comparison, decisive fact, explanation, correction, history.
