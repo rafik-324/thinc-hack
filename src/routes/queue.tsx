@@ -98,14 +98,10 @@ function ClaimsQueue() {
   }, []);
 
   const total = CLAIMS.length;
-  const changedCount = CLAIMS.filter(isChanged).length;
   const openCount = CLAIMS.filter((c) => c.status === "open").length;
-  const decisionCounts = DECISION_ORDER.map((d) => ({
-    d,
-    v1: CLAIMS.filter((c) => c.decisionV1 === d).length,
-    v2: CLAIMS.filter((c) => c.decisionV2 === d).length,
-  }));
-  const maxCount = Math.max(1, ...decisionCounts.flatMap((x) => [x.v1, x.v2]));
+  const currentCounts = DECISION_ORDER.map((d) => ({ d, n: CLAIMS.filter((c) => effectiveDecision(c, mode) === d).length }));
+  const currentMax = Math.max(1, ...currentCounts.map((x) => x.n));
+  const openVolume = CLAIMS.filter((c) => c.status === "open").reduce((sum, c) => sum + c.amountEur, 0);
 
   if (isLoading) {
     return <p className="eyebrow p-6">Loading live claims…</p>;
@@ -118,9 +114,28 @@ function ClaimsQueue() {
     <div className="space-y-3">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-3">
         <div ref={leftColRef} className="grid min-w-0 grid-cols-1 content-start gap-3">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
-            <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <div className="rounded-lg border border-border bg-card p-5 md:row-span-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-muted-foreground">Decision distribution</span>
+                <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase text-foreground">Policy {mode}</span>
+              </div>
+              <div className="mt-5 space-y-3">
+                {currentCounts.map(({ d, n }) => (
+                  <button key={d} type="button" onClick={() => setDecisionFilter(decisionFilter === d ? "all" : d)} className={cn("block w-full text-left", decisionFilter !== "all" && decisionFilter !== d && "opacity-40")}>
+                    <div className="flex items-baseline justify-between gap-2 text-xs">
+                      <span className="text-muted-foreground">{DECISION_LABELS[d]}</span>
+                      <span className="font-mono tabular-nums text-foreground">{n} <span className="text-muted-foreground">· {Math.round((n / Math.max(1, total)) * 100)}%</span></span>
+                    </div>
+                    <div className="mt-1.5 h-2.5 rounded-full bg-foreground/[0.06]">
+                      <div className={cn("h-full rounded-full bg-gradient-to-r", n === currentMax ? "from-foreground/30 to-foreground shadow-[0_0_14px_oklch(1_0_0/0.12)]" : "from-foreground/5 to-foreground/25")} style={{ width: `${(n / currentMax) * 100}%` }} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <SmallKpi label="Active claims" value={String(openCount)} chip={`of ${total}`} caption="Open claims under the current policy" />
+            <SmallKpi label="Open claim volume" value={`€${Math.round(openVolume).toLocaleString("de-DE")}`} chip={`Ø €${Math.round(openVolume / Math.max(1, openCount)).toLocaleString("de-DE")}`} caption="Total amount of active claims" />
           </div>
 
           <div className="rounded-lg border border-border bg-card p-5">
@@ -297,20 +312,15 @@ function ClaimsQueue() {
   );
 }
 
-function KpiCard({ label, value, chip, caption, bars, max, accent, className }: { label: string; value: number; chip: string; caption: string; bars: number[]; max: number; accent?: boolean; className?: string }) {
+function SmallKpi({ label, value, chip, caption }: { label: string; value: string; chip: string; caption: string }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-card p-5", className)}>
+    <div className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">{label}</span>
-        <span className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tabular-nums", accent ? "border-contrast/40 text-contrast" : "border-border text-foreground")}>{chip}</span>
+        <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-foreground">{chip}</span>
       </div>
-      <p className="mt-3 font-mono text-4xl font-medium tabular-nums text-foreground">{value}</p>
+      <p className="mt-3 font-mono text-3xl font-medium tabular-nums text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{caption}</p>
-      <div className="mt-5 flex h-16 items-end gap-1.5">
-        {bars.map((b, i) => (
-          <div key={i} className={cn("flex-1 rounded-t-md bg-gradient-to-b", b === Math.max(...bars) ? "from-foreground to-foreground/25 shadow-[0_0_14px_oklch(1_0_0/0.12)]" : "from-foreground/15 to-foreground/[0.02]")} style={{ height: `${Math.max(8, (b / max) * 100)}%` }} />
-        ))}
-      </div>
     </div>
   );
 }
