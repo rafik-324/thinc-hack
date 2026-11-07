@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
+import { usePolicies } from "@/lib/policies";
 import { cn } from "@/lib/utils";
 import { TaktileLogo } from "@/components/taktile-logo";
 
@@ -22,14 +23,13 @@ const NAV_ITEMS = [
   { title: "History", to: "/history", icon: History },
 ] as const;
 
-const VERSION_LABELS: Record<VersionMode, string> = {
-  v1: "Policy v1",
-  v2: "Policy v2",
-};
+
 
 
 function TopBar() {
   const { mode, setMode, dataSource, setDataSource } = usePolicy();
+  const { data: policies = [] } = usePolicies();
+  const labelOf = (v: string) => policies.find((p) => p.version === v)?.name ?? `Policy ${v}`;
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
@@ -37,7 +37,7 @@ function TopBar() {
 
   const apply = () => {
     setMode(pending);
-    toast.success(`${VERSION_LABELS[pending]} aktualisiert`, {
+    toast.success(`${labelOf(pending)} aktualisiert`, {
       description: "25 Claims wurden neu geprüft.",
     });
   };
@@ -77,9 +77,9 @@ function TopBar() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {(Object.keys(VERSION_LABELS) as VersionMode[]).map((version) => (
+            {(policies.some((p) => p.version === pending) ? policies.map((p) => p.version) : [pending, ...policies.map((p) => p.version)]).map((version) => (
               <SelectItem key={version} value={version} className="font-mono text-xs">
-                {VERSION_LABELS[version]}
+                {labelOf(version)}
               </SelectItem>
             ))}
           </SelectContent>

@@ -21,7 +21,7 @@ export interface PolicyState {
   overrides: Override[];
   addOverride: (override: Omit<Override, "id" | "at">) => void;
   overridesFor: (claimId: string) => Override[];
-  effectiveDecision: (claim: Claim, version: "v1" | "v2") => Decision;
+  effectiveDecision: (claim: Claim, version: VersionMode) => Decision;
 }
 
 // Context, hook and provider live in ONE module on purpose: they hot-reload
@@ -82,7 +82,7 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
       effectiveDecision: (claim, version) => {
         const latest = overrides.find((o) => o.claimId === claim.id);
         if (latest) return latest.newDecision;
-        return version === "v1" ? claim.decisionV1 : claim.decisionV2;
+        return version.startsWith("v1") ? claim.decisionV1 : claim.decisionV2;
       },
     }),
     [dataSource, mode, selectedClaimId, overrides],

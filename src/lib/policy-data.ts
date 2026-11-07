@@ -7,7 +7,7 @@ export type Decision =
   | "request_information"
   | "human_review";
 export type ClaimStatus = "open" | "closed";
-export type VersionMode = "v1" | "v2";
+export type VersionMode = string;
 
 export const DECISION_LABELS: Record<Decision, string> = {
   fast_track: "Fast track",
