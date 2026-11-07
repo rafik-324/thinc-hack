@@ -50,7 +50,7 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
         return version === "v1" ? claim.decisionV1 : claim.decisionV2;
       },
     }),
-    [mode, tab, overrides],
+    [mode, tab, selectedClaimId, overrides],
   );
 
   return <PolicyContext.Provider value={value}>{children}</PolicyContext.Provider>;

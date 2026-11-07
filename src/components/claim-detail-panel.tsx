@@ -1,24 +1,70 @@
-import { ArrowRight, ExternalLink, Lock } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { ArrowRight, Lock, PencilLine } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DECISION_LABELS,
+  DECISION_ORDER,
   getRule,
   isChanged,
   type Claim,
+  type Decision,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
-  const { mode, effectiveDecision, overridesFor } = usePolicy();
+  const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
   const rule = getRule(claim.rule);
   const claimOverrides = overridesFor(claim.id);
   const changed = isChanged(claim);
   const closed = claim.status === "closed";
   const currentDecision = effectiveDecision(claim, mode === "v1" ? "v1" : "v2");
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newDecision, setNewDecision] = useState<Decision>("standard_review");
+  const [reason, setReason] = useState("");
+  const [reviewer, setReviewer] = useState("");
+
+  const saveOverride = () => {
+    if (!reason.trim() || !reviewer.trim()) {
+      toast.error("Bitte Grund und Prüfer:in angeben.");
+      return;
+    }
+    addOverride({
+      claimId: claim.id,
+      previousDecision: currentDecision,
+      newDecision,
+      reason: reason.trim(),
+      reviewer: reviewer.trim(),
+    });
+    setDialogOpen(false);
+    setReason("");
+    setReviewer("");
+    toast.success(`Entscheidung für ${claim.id} korrigiert.`);
+  };
 
   return (
     <div className="flex h-full min-h-80 flex-col">
@@ -160,14 +206,88 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
       </div>
 
       <div className="shrink-0 border-t border-border p-4">
-        <Link
-          to="/claims/$claimId"
-          params={{ claimId: claim.id }}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Open full claim
-          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
-        </Link>
+        {closed ? (
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock aria-hidden="true" className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+            Closed — the decision is protected and cannot be corrected.
+          </p>
+        ) : (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="h-8 w-full gap-2 rounded-sm bg-primary text-primary-foreground text-xs"
+              >
+                <PencilLine aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Correct decision
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  Correct decision for <span className="font-mono tabular-nums">{claim.id}</span>
+                </DialogTitle>
+                <DialogDescription>
+                  The correction is stored for this session only and is shown in the audit trail.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="override-decision" className="text-xs font-medium text-muted-foreground">
+                    New decision
+                  </Label>
+                  <Select
+                    value={newDecision}
+                    onValueChange={(v) => setNewDecision(v as Decision)}
+                  >
+                    <SelectTrigger id="override-decision" className="h-9 rounded-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DECISION_ORDER.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {DECISION_LABELS[d]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="override-reason" className="text-xs font-medium text-muted-foreground">
+                    Reason
+                  </Label>
+                  <Textarea
+                    id="override-reason"
+                    className="h-9 min-h-9 rounded-sm"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Why is the engine's decision wrong?"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="override-reviewer" className="text-xs font-medium text-muted-foreground">
+                    Reviewer
+                  </Label>
+                  <Input
+                    id="override-reviewer"
+                    className="h-9 rounded-sm"
+                    value={reviewer}
+                    onChange={(e) => setReviewer(e.target.value)}
+                    placeholder="Your name"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" className="h-9 rounded-sm" onClick={() => setDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button className="h-9 rounded-sm bg-primary text-primary-foreground" onClick={saveOverride}>
+                  Save correction →
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
