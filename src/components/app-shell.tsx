@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -16,15 +16,14 @@ import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { title: "Overview", tab: "overview", icon: LayoutGrid },
-  { title: "Update", tab: "update", icon: RefreshCw },
-  { title: "History", tab: "history", icon: History },
+  { title: "Overview", to: "/queue", icon: LayoutGrid },
+  { title: "Update", to: "/update", icon: RefreshCw },
+  { title: "History", to: "/history", icon: History },
 ] as const;
 
 const VERSION_LABELS: Record<VersionMode, string> = {
   v1: "Policy v1",
   v2: "Policy v2",
-  compare: "v1 vs v2",
 };
 
 
@@ -82,7 +81,7 @@ function TopBar() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { tab, setTab } = usePolicy();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,12 +111,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className={cn("flex-1 space-y-1 py-2", collapsed ? "px-2" : "px-3")}>
           {NAV_ITEMS.map((item) => {
-            const active = tab === item.tab;
+            const active = pathname.startsWith(item.to);
             return (
-              <button
-                type="button"
-                key={item.tab}
-                onClick={() => setTab(item.tab)}
+              <Link
+                to={item.to}
+                key={item.to}
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? item.title : undefined}
                 className={cn(
@@ -131,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
                 <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
                 {!collapsed && item.title}
-              </button>
+              </Link>
             );
           })}
         </nav>

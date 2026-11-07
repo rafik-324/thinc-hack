@@ -1,6 +1,6 @@
 export type Decision = "fast_track" | "standard_review" | "specialist_review" | "reject";
 export type ClaimStatus = "open" | "closed";
-export type VersionMode = "v1" | "v2" | "compare";
+export type VersionMode = "v1" | "v2";
 
 export const DECISION_LABELS: Record<Decision, string> = {
   fast_track: "Fast track",
