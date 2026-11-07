@@ -1,8 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge } from "lucide-react";
-import type { ReactNode } from "react";
+import { ClipboardList, Gauge, RefreshCw } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
@@ -13,6 +22,64 @@ const NAV_ITEMS = [
   { title: "Policy Impact", url: "/policy-impact", icon: Gauge },
 ];
 
+const VERSION_LABELS: Record<VersionMode, string> = {
+  v1: "Policy v1",
+  v2: "Policy v2",
+  compare: "v1 vs v2",
+};
+
+function TopBar() {
+  const { mode, setMode } = usePolicy();
+  const [pending, setPending] = useState<VersionMode>(mode);
+  const dirty = pending !== mode;
+
+  useEffect(() => setPending(mode), [mode]);
+
+  const apply = () => {
+    setMode(pending);
+    toast.success(`${VERSION_LABELS[pending]} aktualisiert`, {
+      description: "25 Claims wurden neu geprüft.",
+    });
+  };
+
+  return (
+    <div className="fixed inset-x-0 top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card px-4">
+      <Link to="/" className="flex items-center gap-2">
+        <span aria-hidden="true" className="size-2 rounded-full bg-contrast" />
+        <span className="text-sm font-medium tracking-normal text-foreground">
+          Policy Replay
+        </span>
+      </Link>
+
+      <div className="flex items-center gap-2">
+        <span className="eyebrow hidden sm:block">Policy Version</span>
+        <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
+          <SelectTrigger
+            aria-label="Policy version"
+            className="h-8 w-32 rounded-sm font-mono tabular-nums text-xs"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(VERSION_LABELS) as VersionMode[]).map((version) => (
+              <SelectItem key={version} value={version} className="font-mono text-xs">
+                {VERSION_LABELS[version]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="sm" className="relative rounded-sm text-xs" onClick={apply}>
+          <RefreshCw size={14} strokeWidth={1.5} />
+          Update
+          {dirty && (
+            <span aria-hidden="true" className="absolute -right-1 -top-1 size-1.5 rounded-full bg-contrast" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { mode, setMode } = usePolicy();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
@@ -21,7 +88,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-20 flex w-56 flex-col border-r border-border bg-card">
+      <TopBar />
+
+      <aside className="fixed inset-y-0 top-12 left-0 z-20 flex w-56 flex-col border-r border-border bg-card">
         <div className="space-y-2 px-5 py-5">
           <span className="text-lg font-medium tracking-normal text-foreground">Policy Replay</span>
           <p className="eyebrow">CLAIMS REVIEW</p>
@@ -53,8 +122,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="pl-56">
-        <header className="sticky top-0 z-10 flex h-[65px] items-center justify-between border-b border-border bg-background px-6">
+      <div className="pl-56 pt-12">
+        <header className="sticky top-12 z-10 flex h-[65px] items-center justify-between border-b border-border bg-background px-6">
           <span className="eyebrow">{pageName}</span>
           <div className="flex items-center gap-4">
             <ToggleGroup
