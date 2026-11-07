@@ -32,7 +32,7 @@ import {
   type Claim,
   type Decision,
 } from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-context";
+import { usePolicy } from "@/lib/policy-store";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();

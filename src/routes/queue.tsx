@@ -29,7 +29,7 @@ import {
   isChanged,
   type Decision,
 } from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-context";
+import { usePolicy } from "@/lib/policy-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
