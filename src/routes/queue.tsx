@@ -74,6 +74,8 @@ function ClaimsQueue() {
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
+  const active = rows.find((c) => c.id === selectedId) ?? rows[0];
+
   const total = CLAIMS.length;
   const changedCount = CLAIMS.filter(isChanged).length;
   const openCount = CLAIMS.filter((c) => c.status === "open").length;
@@ -172,13 +174,21 @@ function ClaimsQueue() {
               return (
                 <TableRow
                   key={claim.id}
+                  tabIndex={0}
+                  aria-selected={active?.id === claim.id}
                   className={cn(
-                    "h-11 cursor-pointer hover:bg-card [&>td]:py-2",
+                    "h-11 cursor-pointer outline-none hover:bg-card focus-visible:bg-card [&>td]:py-2",
                     changed && "shadow-[inset_2px_0_0_var(--contrast)]",
+                    active?.id === claim.id &&
+                      cn("bg-foreground/[0.07]", !changed && "shadow-[inset_2px_0_0_var(--foreground)]"),
                   )}
-                  onClick={() =>
-                    navigate({ to: "/claims/$claimId", params: { claimId: claim.id } })
-                  }
+                  onClick={() => setSelectedId(claim.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedId(claim.id);
+                    }
+                  }}
                 >
                   <TableCell className="font-mono tabular-nums text-sm text-foreground">{claim.id}</TableCell>
                   <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
