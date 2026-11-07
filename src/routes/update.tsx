@@ -166,12 +166,18 @@ function PolicyUpdate() {
                   kpi.valueClass,
                 )}
               >
-                {kpi.prevValue && (
-                  <span className="inline-block max-w-0 translate-x-1 overflow-hidden whitespace-nowrap align-bottom opacity-0 transition-all duration-300 ease-out group-hover/kpi:max-w-[9ch] group-hover/kpi:translate-x-0 group-hover/kpi:opacity-100">
-                    {kpi.prevValue} →{" "}
+                {kpi.prevValue ? (
+                  <span className="relative inline-grid">
+                    <span className="col-start-1 row-start-1 transition-all duration-300 ease-out group-hover/kpi:-translate-y-1 group-hover/kpi:opacity-0">
+                      {kpi.value}
+                    </span>
+                    <span className="col-start-1 row-start-1 translate-y-1 opacity-0 transition-all duration-300 ease-out group-hover/kpi:translate-y-0 group-hover/kpi:opacity-100">
+                      {kpi.prevValue}
+                    </span>
                   </span>
+                ) : (
+                  kpi.value
                 )}
-                {kpi.value}
               </p>
             </div>
           ))}
