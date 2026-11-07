@@ -3,7 +3,6 @@ import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
@@ -81,11 +79,8 @@ function TopBar() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mode, setMode } = usePolicy();
   const [collapsed, setCollapsed] = useState(false);
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
-  const pageName = NAV_ITEMS.find((item) => item.url === currentPath)?.title
-    ?? (currentPath.startsWith("/claims/") ? "Claim Detail" : "Policy Replay");
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,25 +140,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className={cn("pt-[72px] transition-all duration-200", collapsed ? "pl-[88px]" : "pl-[248px]")}>
-        <header className="sticky top-[72px] z-10 mx-3 flex h-[65px] items-center justify-between rounded-lg border border-border bg-card px-6">
-          <span className="eyebrow">{pageName}</span>
-          <div className="flex items-center gap-4">
-            <ToggleGroup
-              type="single"
-              value={mode}
-              onValueChange={(value) => value && setMode(value as VersionMode)}
-              variant="outline"
-              size="sm"
-            >
-              <ToggleGroupItem value="v1" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">v1</ToggleGroupItem>
-              <ToggleGroupItem value="v2" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">v2</ToggleGroupItem>
-              <ToggleGroupItem value="compare" className="rounded-sm font-mono tabular-nums text-xs data-[state=on]:bg-foreground data-[state=on]:text-background">Compare</ToggleGroupItem>
-            </ToggleGroup>
-            <Badge variant="outline" className="eyebrow rounded-sm border-contrast/40 text-contrast">
-              V2 PREVIEW
-            </Badge>
-          </div>
-        </header>
         <main className="px-6 py-6">{children}</main>
       </div>
     </div>
