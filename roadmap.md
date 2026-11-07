@@ -1,4 +1,4 @@
 # Roadmap
 
-- [ ] Vergleich (v1/v2) aus der Queue entfernen, eigene Seite /update unter dem Update-Reiter (in Arbeit)
-- [ ] Mittelblock soll unter der oberen Leiste durchscrollen und auf Höhe des oberen Endes der Seitenleiste verschwinden
+- [x] Vergleich (v1/v2) aus der Queue entfernt, eigene Seite /update unter dem Update-Reiter
+- [x] Mittelblock scrollt unter der oberen Leiste durch und verschwindet auf Höhe des oberen Endes der Seitenleiste
