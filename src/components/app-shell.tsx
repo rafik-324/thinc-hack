@@ -86,6 +86,7 @@ function TopBar() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const { tab, setTab } = usePolicy();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
 
   return (
