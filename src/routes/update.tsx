@@ -38,7 +38,7 @@ import {
   decisionMatrix,
   isChanged,
 } from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-context";
+import { usePolicy } from "@/lib/policy-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/update")({
