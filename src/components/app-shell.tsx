@@ -3,7 +3,6 @@ import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
@@ -81,11 +79,8 @@ function TopBar() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mode, setMode } = usePolicy();
   const [collapsed, setCollapsed] = useState(false);
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
-  const pageName = NAV_ITEMS.find((item) => item.url === currentPath)?.title
-    ?? (currentPath.startsWith("/claims/") ? "Claim Detail" : "Policy Replay");
 
   return (
     <div className="min-h-screen bg-background">
