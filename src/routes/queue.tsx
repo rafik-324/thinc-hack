@@ -22,10 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useClaimSource } from "@/lib/live-claims";
 import {
-  CLAIMS,
   DECISION_LABELS,
-  DECISION_ORDER,
   isChanged,
   type Decision,
 } from "@/lib/policy-data";
@@ -59,6 +58,7 @@ export const Route = createFileRoute("/queue")({
 function ClaimsQueue() {
   const { mode, effectiveDecision, overrides, selectedClaimId, selectClaim } = usePolicy();
   const search = Route.useSearch();
+  const { claims: CLAIMS, order: DECISION_ORDER, isLoading, error } = useClaimSource();
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [changedOnly, setChangedOnly] = useState(false);
@@ -76,7 +76,9 @@ function ClaimsQueue() {
       }
       return true;
     });
-  }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
+  }, [CLAIMS, decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
+
+  useEffect(() => setDecisionFilter("all"), [DECISION_ORDER]);
 
   const wheelLock = useRef(0);
   const leftColRef = useRef<HTMLDivElement>(null);
@@ -104,6 +106,13 @@ function ClaimsQueue() {
     v2: CLAIMS.filter((c) => c.decisionV2 === d).length,
   }));
   const maxCount = Math.max(1, ...decisionCounts.flatMap((x) => [x.v1, x.v2]));
+
+  if (isLoading) {
+    return <p className="eyebrow p-6">Loading live claims…</p>;
+  }
+  if (error) {
+    return <p className="p-6 text-sm text-decision-reject">Live data could not be loaded: {error.message}</p>;
+  }
 
   return (
     <div className="space-y-3">

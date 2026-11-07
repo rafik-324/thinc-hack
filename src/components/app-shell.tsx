@@ -28,7 +28,7 @@ const VERSION_LABELS: Record<VersionMode, string> = {
 
 
 function TopBar() {
-  const { mode, setMode } = usePolicy();
+  const { mode, setMode, dataSource, setDataSource } = usePolicy();
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
@@ -51,7 +51,24 @@ function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <span className="eyebrow hidden sm:block">Policy Version</span>
+        <span className="eyebrow hidden sm:block">Daten</span>
+        <div role="group" aria-label="Datenquelle" className="flex h-8 items-center rounded-sm border border-border p-0.5">
+          {(["demo", "live"] as const).map((source) => (
+            <button
+              key={source}
+              type="button"
+              aria-pressed={dataSource === source}
+              onClick={() => setDataSource(source)}
+              className={
+                "h-full rounded-[6px] px-2.5 text-xs font-medium transition-colors " +
+                (dataSource === source ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              {source === "demo" ? "Testdaten" : "Live"}
+            </button>
+          ))}
+        </div>
+        <span className="eyebrow ml-2 hidden sm:block">Policy Version</span>
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
             aria-label="Policy version"
