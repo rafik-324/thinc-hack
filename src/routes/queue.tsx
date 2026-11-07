@@ -276,12 +276,12 @@ function ClaimsQueue() {
         >
           {/* Two cards peeking out behind, fanned to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[3.2deg] rounded-lg border border-foreground/35 bg-card opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[3.2deg] rounded-lg border border-foreground/[0.18] bg-card opacity-60" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/35 bg-card opacity-85" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/[0.18] bg-card opacity-85" />
           )}
-          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-foreground/25 bg-[oklch(0.15_0_0/0.92)] shadow-[inset_0_1px_0_oklch(1_0_0/0.06)] backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-foreground/[0.14] bg-[oklch(0.15_0_0/0.92)] shadow-[inset_0_1px_0_oklch(1_0_0/0.06)] backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
           </div>
         </div>
