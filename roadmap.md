@@ -5,4 +5,4 @@
 
 # Claims Queue styling
 - [x] Restyle decision badges and queue presentation without changing analysis logic.
-- [ ] Verify comparison, filters and claim navigation.
+- [x] Verify comparison, filters and claim navigation.
