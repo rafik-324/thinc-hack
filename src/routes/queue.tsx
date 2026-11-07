@@ -179,11 +179,11 @@ function ClaimsQueue() {
                   data-state={active?.id === claim.id ? "selected" : undefined}
                   className={cn(
                     "h-11 cursor-pointer outline-none hover:bg-muted/40 focus-visible:bg-muted/40 [&>td]:py-2",
-                    "data-[state=selected]:bg-muted data-[state=selected]:hover:bg-muted",
+                    "data-[state=selected]:bg-foreground/10 data-[state=selected]:hover:bg-foreground/10",
                     changed && "shadow-[inset_2px_0_0_var(--contrast)]",
                     active?.id === claim.id &&
                       !changed &&
-                      "data-[state=selected]:shadow-[inset_2px_0_0_var(--foreground)]",
+                      "data-[state=selected]:shadow-[inset_3px_0_0_var(--foreground)]",
                   )}
                   onClick={() => setSelectedId(claim.id)}
                   onKeyDown={(event) => {
