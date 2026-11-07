@@ -9,7 +9,7 @@ import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { title: "Claims Queue", url: "/", icon: ClipboardList },
+  { title: "Claims Queue", url: "/queue", icon: ClipboardList },
   { title: "Policy Impact", url: "/policy-impact", icon: Gauge },
 ];
 
