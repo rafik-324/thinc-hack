@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePolicy } from "@/lib/policy-store";
+import { usePolicy } from "@/lib/policy-context";
 import type { VersionMode } from "@/lib/policy-data";
 import { cn } from "@/lib/utils";
 

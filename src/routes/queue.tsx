@@ -28,7 +28,7 @@ import {
   isChanged,
   type Decision,
 } from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-store";
+import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
