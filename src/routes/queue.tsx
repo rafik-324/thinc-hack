@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
@@ -82,6 +82,7 @@ function ClaimsQueue() {
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
+  const wheelLock = useRef(0);
   const active = rows.find((c) => c.id === selectedClaimId) ?? rows[0];
 
   const total = CLAIMS.length;
@@ -250,8 +251,40 @@ function ClaimsQueue() {
       </div>
       </div>
         </div>
-        <div className="min-h-80 self-start overflow-hidden rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]">
-          {active ? <ClaimDetailPanel claim={active} /> : null}
+        <div
+          className="relative min-h-80 self-start lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]"
+          onWheel={(event) => {
+            if (!active || rows.length < 2) return;
+            // Let the card body scroll first; switch claims only at its edge.
+            let el = event.target as HTMLElement | null;
+            while (el && el !== event.currentTarget) {
+              const oy = getComputedStyle(el).overflowY;
+              if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight) {
+                const atTop = el.scrollTop <= 0;
+                const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+                if ((event.deltaY > 0 && !atBottom) || (event.deltaY < 0 && !atTop)) return;
+                break;
+              }
+              el = el.parentElement;
+            }
+            const now = Date.now();
+            if (now - wheelLock.current < 450 || Math.abs(event.deltaY) < 8) return;
+            wheelLock.current = now;
+            const idx = rows.findIndex((c) => c.id === active.id);
+            const next = Math.min(rows.length - 1, Math.max(0, idx + (event.deltaY > 0 ? 1 : -1)));
+            if (next !== idx) selectClaim(rows[next].id);
+          }}
+        >
+          {/* Two cards peeking out behind, fanned slightly to the left */}
+          {rows.length > 2 && (
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left -translate-x-2 -rotate-[2.2deg] rounded-lg border border-border bg-card opacity-60" />
+          )}
+          {rows.length > 1 && (
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left -translate-x-1 -rotate-[1.1deg] rounded-lg border border-border bg-card opacity-80" />
+          )}
+          <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {active ? <ClaimDetailPanel claim={active} /> : null}
+          </div>
         </div>
       </div>
     </div>
