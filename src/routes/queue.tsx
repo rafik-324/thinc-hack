@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -52,11 +53,11 @@ export const Route = createFileRoute("/queue")({
 });
 
 function ClaimsQueue() {
-  const navigate = useNavigate();
   const { mode, effectiveDecision, overrides } = usePolicy();
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [changedOnly, setChangedOnly] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     return CLAIMS.filter((claim) => {
