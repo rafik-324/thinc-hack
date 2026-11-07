@@ -20,12 +20,13 @@ export function DecisionBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border font-medium whitespace-nowrap",
-        size === "sm" ? "px-2.5 py-0.5 text-xs" : "px-4 py-1.5 text-base",
+        "inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+        size === "lg" && "px-3 py-1 text-sm",
         DECISION_CLASSES[decision],
         className,
       )}
     >
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-current opacity-70" />
       {DECISION_LABELS[decision]}
     </span>
   );

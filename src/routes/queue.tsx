@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRightLeft, Lock } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { DecisionBadge } from "@/components/decision-badge";
@@ -30,6 +30,7 @@ import {
   type Decision,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
   head: () => ({
@@ -76,22 +77,27 @@ function ClaimsQueue() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium tracking-normal text-foreground">Claims Queue</h1>
+        <p className="eyebrow mb-2">CLAIMS QUEUE</p>
+        <h1 className="text-3xl font-medium tracking-tight text-foreground">Claims Queue</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{CLAIMS.length}</span> claims · decisions shown for{" "}
-          {mode === "compare" ? "policy v1 and v2" : `policy ${mode}`}
+          {mode === "compare" ? (
+            <>policy <span className="font-mono tabular-nums">v1</span> and <span className="font-mono tabular-nums">v2</span></>
+          ) : (
+            <>policy <span className="font-mono tabular-nums">{mode}</span></>
+          )}
         </p>
       </div>
 
       <Card>
         <CardContent className="flex flex-wrap items-end gap-6 pt-6">
           <div className="space-y-2">
-            <Label htmlFor="decision-filter">Decision</Label>
+            <Label htmlFor="decision-filter" className="eyebrow">Decision</Label>
             <Select
               value={decisionFilter}
               onValueChange={(v) => setDecisionFilter(v as Decision | "all")}
             >
-              <SelectTrigger id="decision-filter" className="w-48">
+              <SelectTrigger id="decision-filter" className="w-48 rounded-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -105,12 +111,12 @@ function ClaimsQueue() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="status-filter">Status</Label>
+            <Label htmlFor="status-filter" className="eyebrow">Status</Label>
             <Select
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
             >
-              <SelectTrigger id="status-filter" className="w-40">
+              <SelectTrigger id="status-filter" className="w-40 rounded-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -121,29 +127,26 @@ function ClaimsQueue() {
             </Select>
           </div>
           <div className="flex items-center gap-2 pb-1">
-            <Switch id="changed-filter" checked={changedOnly} onCheckedChange={setChangedOnly} />
-            <Label htmlFor="changed-filter">Changed by v2</Label>
+            <Switch id="changed-filter" className="rounded-sm" checked={changedOnly} onCheckedChange={setChangedOnly} />
+            <Label htmlFor="changed-filter" className="eyebrow">Changed by v2</Label>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <div className="overflow-hidden rounded-lg border border-border">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Claim ID</TableHead>
-              <TableHead>Claimant</TableHead>
+            <TableRow className="bg-card hover:bg-card">
+              <TableHead className="eyebrow h-10">Claim ID</TableHead>
+              <TableHead className="eyebrow h-10">Claimant</TableHead>
               {mode === "compare" ? (
-                <>
-                  <TableHead>Decision v1</TableHead>
-                  <TableHead>Decision v2</TableHead>
-                </>
+                <TableHead className="eyebrow h-10" colSpan={2}>Decision v1 → v2</TableHead>
               ) : (
-                <TableHead>Decision</TableHead>
+                <TableHead className="eyebrow h-10">Decision</TableHead>
               )}
-              <TableHead>Rule</TableHead>
-              <TableHead className="w-1/3">Decisive fact</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="eyebrow h-10">Rule</TableHead>
+              <TableHead className="eyebrow h-10 w-1/3">Decisive fact</TableHead>
+              <TableHead className="eyebrow h-10">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,34 +156,31 @@ function ClaimsQueue() {
               return (
                 <TableRow
                   key={claim.id}
-                  className="cursor-pointer"
+                  className={cn(
+                    "h-11 cursor-pointer hover:bg-card [&>td]:py-2",
+                    changed && "shadow-[inset_2px_0_0_var(--contrast)]",
+                  )}
                   onClick={() =>
                     navigate({ to: "/claims/$claimId", params: { claimId: claim.id } })
                   }
                 >
-                  <TableCell className="font-mono tabular-nums font-medium text-foreground">{claim.id}</TableCell>
+                  <TableCell className="font-mono tabular-nums text-sm text-foreground">{claim.id}</TableCell>
                   <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
                   {mode === "compare" ? (
-                    <>
-                      <TableCell>
+                    <TableCell colSpan={2}>
+                      <div className="flex items-center gap-2">
                         <DecisionBadge decision={claim.decisionV1} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <DecisionBadge decision={claim.decisionV2} />
-                          {changed && (
-                            <ArrowRightLeft className="h-3.5 w-3.5 text-decision-specialist" />
-                          )}
-                        </div>
-                      </TableCell>
-                    </>
+                        <ArrowRight aria-hidden="true" size={14} className="shrink-0 text-contrast" />
+                        <DecisionBadge decision={claim.decisionV2} />
+                      </div>
+                    </TableCell>
                   ) : (
                     <TableCell>
                       <DecisionBadge decision={effectiveDecision(claim, mode)} />
                     </TableCell>
                   )}
                   <TableCell>
-                    <Badge variant="outline" className="font-mono tabular-nums">{claim.rule}</Badge>
+                    <Badge variant="outline" className="rounded-sm font-mono tabular-nums">{claim.rule}</Badge>
                   </TableCell>
                   <TableCell className="max-w-md">
                     <span className="line-clamp-2 text-sm text-muted-foreground">
@@ -190,13 +190,13 @@ function ClaimsQueue() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {claim.status === "closed" ? (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary" className="gap-1 rounded-sm">
                           <Lock className="h-3 w-3" /> Closed
                         </Badge>
                       ) : (
-                        <Badge variant="outline">Open</Badge>
+                        <Badge variant="outline" className="rounded-sm">Open</Badge>
                       )}
-                      {overridden && <Badge variant="outline">Overridden</Badge>}
+                      {overridden && <Badge variant="outline" className="rounded-sm border-foreground/20 font-mono text-[10px] uppercase">Overridden</Badge>}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -204,14 +204,14 @@ function ClaimsQueue() {
             })}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={mode === "compare" ? 7 : 6} className="py-10 text-center text-muted-foreground">
                   No claims match the current filters.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
     </div>
   );
 }
