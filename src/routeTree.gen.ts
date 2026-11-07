@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PolicyImpactRouteImport } from './routes/policy-impact'
+import { Route as ClaimsClaimIdRouteImport } from './routes/claims.$claimId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PolicyImpactRoute = PolicyImpactRouteImport.update({
+  id: '/policy-impact',
+  path: '/policy-impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimsClaimIdRoute = ClaimsClaimIdRouteImport.update({
+  id: '/claims/$claimId',
+  path: '/claims/$claimId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/policy-impact': typeof PolicyImpactRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/policy-impact': typeof PolicyImpactRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/policy-impact': typeof PolicyImpactRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/policy-impact' | '/claims/$claimId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/policy-impact' | '/claims/$claimId'
+  id: '__root__' | '/' | '/policy-impact' | '/claims/$claimId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PolicyImpactRoute: typeof PolicyImpactRoute
+  ClaimsClaimIdRoute: typeof ClaimsClaimIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/policy-impact': {
+      id: '/policy-impact'
+      path: '/policy-impact'
+      fullPath: '/policy-impact'
+      preLoaderRoute: typeof PolicyImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claims/$claimId': {
+      id: '/claims/$claimId'
+      path: '/claims/$claimId'
+      fullPath: '/claims/$claimId'
+      preLoaderRoute: typeof ClaimsClaimIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PolicyImpactRoute: PolicyImpactRoute,
+  ClaimsClaimIdRoute: ClaimsClaimIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
