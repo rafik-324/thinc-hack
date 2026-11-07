@@ -176,11 +176,14 @@ function ClaimsQueue() {
                   key={claim.id}
                   tabIndex={0}
                   aria-selected={active?.id === claim.id}
+                  data-state={active?.id === claim.id ? "selected" : undefined}
                   className={cn(
-                    "h-11 cursor-pointer outline-none hover:bg-card focus-visible:bg-card [&>td]:py-2",
+                    "h-11 cursor-pointer outline-none hover:bg-muted/40 focus-visible:bg-muted/40 [&>td]:py-2",
+                    "data-[state=selected]:bg-muted data-[state=selected]:hover:bg-muted",
                     changed && "shadow-[inset_2px_0_0_var(--contrast)]",
                     active?.id === claim.id &&
-                      cn("bg-foreground/[0.07]", !changed && "shadow-[inset_2px_0_0_var(--foreground)]"),
+                      !changed &&
+                      "data-[state=selected]:shadow-[inset_2px_0_0_var(--foreground)]",
                   )}
                   onClick={() => setSelectedId(claim.id)}
                   onKeyDown={(event) => {
