@@ -180,6 +180,33 @@ export type Database = {
           },
         ]
       }
+      policies: {
+        Row: {
+          content: string
+          created_at: string
+          file_name: string | null
+          id: string
+          name: string
+          version: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          name: string
+          version: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          name?: string
+          version?: string
+        }
+        Relationships: []
+      }
       validation_results: {
         Row: {
           case_id: string
