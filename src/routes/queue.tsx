@@ -277,10 +277,10 @@ function ClaimsQueue() {
         >
           {/* Two cards peeking out behind, fanned slightly to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-right translate-x-2 rotate-[2.2deg] rounded-lg border border-border bg-card opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.8deg] rounded-lg border border-border bg-card opacity-60" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-right translate-x-1 rotate-[1.1deg] rounded-lg border border-border bg-card opacity-80" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[0.4deg] rounded-lg border border-border bg-card opacity-80" />
           )}
           <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
