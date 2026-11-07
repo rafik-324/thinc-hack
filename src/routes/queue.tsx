@@ -98,14 +98,7 @@ function ClaimsQueue() {
   }, []);
 
   const total = CLAIMS.length;
-  const changedCount = CLAIMS.filter(isChanged).length;
   const openCount = CLAIMS.filter((c) => c.status === "open").length;
-  const decisionCounts = DECISION_ORDER.map((d) => ({
-    d,
-    v1: CLAIMS.filter((c) => c.decisionV1 === d).length,
-    v2: CLAIMS.filter((c) => c.decisionV2 === d).length,
-  }));
-  void decisionCounts;
   const currentCounts = DECISION_ORDER.map((d) => ({ d, n: CLAIMS.filter((c) => effectiveDecision(c, mode) === d).length }));
   const currentMax = Math.max(1, ...currentCounts.map((x) => x.n));
   const openVolume = CLAIMS.filter((c) => c.status === "open").reduce((sum, c) => sum + c.amountEur, 0);
