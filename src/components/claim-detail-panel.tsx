@@ -152,7 +152,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
           </div>
         )}
 
-        {claim.live && <ClaimFieldsEditor key={claim.id} caseId={claim.id} />}
+        {claim.live && <ClaimFieldsEditor key={claim.id} caseId={claim.id} section="history" />}
       </div>
 
       <div className="shrink-0 border-t border-border p-4">
@@ -169,18 +169,25 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
                 className="h-8 w-full gap-2 rounded-sm bg-primary text-primary-foreground text-xs"
               >
                 <PencilLine aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Correct decision
+                Edit claim
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  Correct decision for <span className="font-mono tabular-nums">{claim.id}</span>
+                  Edit <span className="font-mono tabular-nums">{claim.id}</span>
                 </DialogTitle>
                 <DialogDescription>
                   The correction is stored for this session only and is shown in the audit trail.
                 </DialogDescription>
               </DialogHeader>
+              {claim.live && (
+                <div className="space-y-2 border-b border-border pb-4">
+                  <p className="eyebrow">Claim fields</p>
+                  <ClaimFieldsEditor key={claim.id} caseId={claim.id} section="fields" />
+                </div>
+              )}
+              <p className="eyebrow">Decision</p>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label htmlFor="override-decision" className="text-xs font-medium text-muted-foreground">
