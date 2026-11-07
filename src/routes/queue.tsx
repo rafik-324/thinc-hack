@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -74,66 +73,111 @@ function ClaimsQueue() {
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
+  const total = CLAIMS.length;
+  const changedCount = CLAIMS.filter(isChanged).length;
+  const openCount = CLAIMS.filter((c) => c.status === "open").length;
+  const decisionCounts = DECISION_ORDER.map((d) => ({
+    d,
+    v1: CLAIMS.filter((c) => c.decisionV1 === d).length,
+    v2: CLAIMS.filter((c) => c.decisionV2 === d).length,
+  }));
+  const maxCount = Math.max(1, ...decisionCounts.flatMap((x) => [x.v1, x.v2]));
+
   return (
     <div className="space-y-6">
       <div>
         <p className="eyebrow mb-2">CLAIMS QUEUE</p>
         <h1 className="text-3xl font-medium tracking-tight text-foreground">Claims Queue</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{CLAIMS.length}</span> claims · decisions shown for{" "}
-          {mode === "compare" ? (
-            <>policy <span className="font-mono tabular-nums">v1</span> and <span className="font-mono tabular-nums">v2</span></>
-          ) : (
-            <>policy <span className="font-mono tabular-nums">{mode}</span></>
-          )}
-        </p>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-wrap items-end gap-6 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="decision-filter" className="eyebrow">Decision</Label>
-            <Select
-              value={decisionFilter}
-              onValueChange={(v) => setDecisionFilter(v as Decision | "all")}
-            >
-              <SelectTrigger id="decision-filter" className="w-48 rounded-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All decisions</SelectItem>
-                {DECISION_ORDER.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {DECISION_LABELS[d]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:col-span-2">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
+            <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="status-filter" className="eyebrow">Status</Label>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
-            >
-              <SelectTrigger id="status-filter" className="w-40 rounded-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2 pb-1">
-            <Switch id="changed-filter" className="rounded-sm" checked={changedOnly} onCheckedChange={setChangedOnly} />
-            <Label htmlFor="changed-filter" className="eyebrow">Changed by v2</Label>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-medium text-foreground">Queue filters</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{total}</span> claims shown
+                </p>
+              </div>
+              <div className="flex gap-1">
+                {(["all", "open", "closed"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusFilter(s)}
+                    className={cn(
+                      "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
+                      statusFilter === s ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-end gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="decision-filter" className="eyebrow">Decision</Label>
+                <Select value={decisionFilter} onValueChange={(v) => setDecisionFilter(v as Decision | "all")}>
+                  <SelectTrigger id="decision-filter" className="w-48 rounded-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All decisions</SelectItem>
+                    {DECISION_ORDER.map((d) => (
+                      <SelectItem key={d} value={d}>{DECISION_LABELS[d]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2 pb-2">
+                <Switch id="changed-filter" checked={changedOnly} onCheckedChange={setChangedOnly} />
+                <Label htmlFor="changed-filter" className="eyebrow">Changed by v2</Label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h2 className="text-lg font-medium text-foreground">Decision mix</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Claims per decision, v1 → v2</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {decisionCounts.map(({ d, v1, v2 }) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDecisionFilter(decisionFilter === d ? "all" : d)}
+                className={cn(
+                  "flex flex-col items-start gap-3 rounded-md border p-4 text-left transition-colors",
+                  decisionFilter === d ? "border-foreground" : "border-border hover:border-foreground/40",
+                )}
+              >
+                <DecisionBadge decision={d} />
+                <span className="font-mono text-xl tabular-nums text-foreground">
+                  {v1} <span className="text-contrast">→</span> {v2}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card">
+        <div className="flex items-start justify-between gap-4 p-5">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">All claims</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
+            </p>
+          </div>
+        </div>
+      <div className="overflow-hidden border-t border-border">
         <Table>
           <TableHeader>
             <TableRow className="bg-card hover:bg-card">
@@ -211,6 +255,25 @@ function ClaimsQueue() {
             )}
           </TableBody>
         </Table>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({ label, value, chip, caption, bars, max, accent }: { label: string; value: number; chip: string; caption: string; bars: number[]; max: number; accent?: boolean }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className={cn("rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tabular-nums", accent ? "border-contrast/40 text-contrast" : "border-border text-foreground")}>{chip}</span>
+      </div>
+      <p className="mt-3 font-mono text-4xl font-medium tabular-nums text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{caption}</p>
+      <div className="mt-5 flex h-12 items-end gap-1.5">
+        {bars.map((b, i) => (
+          <div key={i} className={cn("flex-1 rounded-sm", accent ? "bg-contrast/70" : "bg-foreground/70")} style={{ height: `${Math.max(6, (b / max) * 100)}%` }} />
+        ))}
       </div>
     </div>
   );
