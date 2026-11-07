@@ -244,9 +244,9 @@ function KpiCard({ label, value, chip, caption, bars, max, accent }: { label: st
       </div>
       <p className="mt-3 font-mono text-4xl font-medium tabular-nums text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{caption}</p>
-      <div className="mt-5 flex h-12 items-end gap-1.5">
+      <div className="mt-5 flex h-16 items-end gap-1.5">
         {bars.map((b, i) => (
-          <div key={i} className={cn("flex-1 rounded-sm", accent ? "bg-contrast/70" : "bg-foreground/70")} style={{ height: `${Math.max(6, (b / max) * 100)}%` }} />
+          <div key={i} className={cn("flex-1 rounded-t-md bg-gradient-to-b", b === Math.max(...bars) ? "from-foreground to-foreground/25 shadow-[0_0_14px_oklch(1_0_0/0.12)]" : "from-foreground/15 to-foreground/[0.02]")} style={{ height: `${Math.max(8, (b / max) * 100)}%` }} />
         ))}
       </div>
     </div>
