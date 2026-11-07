@@ -86,60 +86,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <TopBar />
 
-      <aside
-        className={cn(
-          "fixed bottom-3 left-3 top-[72px] z-20 flex flex-col rounded-lg border border-border bg-card transition-all duration-200",
-          collapsed ? "w-16" : "w-56",
-        )}
-      >
-        <div className={cn("flex items-center py-4", collapsed ? "justify-center px-2" : "justify-between px-5")}>
-          {!collapsed && (
-            <div className="space-y-1">
-              <span className="text-lg font-medium tracking-normal text-foreground">Policy Replay</span>
-              <p className="eyebrow">CLAIMS REVIEW</p>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
-            className="flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {collapsed ? <PanelLeftOpen size={16} strokeWidth={1.5} /> : <PanelLeftClose size={16} strokeWidth={1.5} />}
-          </button>
-        </div>
-        <nav className={cn("flex-1 space-y-1 py-2", collapsed ? "px-2" : "px-3")}>
-          {NAV_ITEMS.map((item) => {
-            const active = currentPath === item.url;
-            return (
-              <Link
-                key={item.url}
-                to={item.url}
-                aria-current={active ? "page" : undefined}
-                title={collapsed ? item.title : undefined}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-sm py-2 text-sm font-medium transition-colors",
-                  collapsed ? "justify-center px-0" : "px-3",
-                  active
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
-                <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
-                {!collapsed && item.title}
-              </Link>
-            );
-          })}
-        </nav>
-        {!collapsed && (
-          <div className="border-t border-border px-5 py-4">
-            <p className="font-mono tabular-nums text-xs text-muted-foreground">Policy v1 · v2 preview</p>
-          </div>
-        )}
-      </aside>
+      <aside className="fixed bottom-3 left-3 top-[72px] z-20 flex w-96 flex-col rounded-lg border border-border bg-card" />
 
-      <div className={cn("pt-[72px] transition-all duration-200", collapsed ? "pl-[88px]" : "pl-[248px]")}>
+      <div className="pl-[408px] pt-[72px]">
         <main className="px-6 py-6">{children}</main>
       </div>
     </div>
