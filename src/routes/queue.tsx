@@ -164,10 +164,10 @@ function ClaimsQueue() {
                 <Label htmlFor="changed-filter" className="eyebrow">Changed by v2</Label>
               </div>
             </div>
+            </div>
           </div>
 
-
-      <div className="rounded-lg border border-border bg-card">
+          <div className="mt-2 rounded-lg border border-border bg-card">
         <div className="flex items-start justify-between gap-4 p-5">
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
