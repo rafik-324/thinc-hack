@@ -85,11 +85,6 @@ function ClaimsQueue() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="eyebrow mb-2">CLAIMS QUEUE</p>
-        <h1 className="text-3xl font-medium tracking-tight text-foreground">Claims Queue</h1>
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid gap-4 lg:col-span-2">
           <div className="grid gap-4 sm:grid-cols-2">
