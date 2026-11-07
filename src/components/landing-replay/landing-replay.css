@@ -1,5 +1,5 @@
 /*
- * Policy Replay landing (dark). Every selector is prefixed `pr-` so it cannot leak into the app.
+ * Retakt landing (dark). Every selector is prefixed `pr-` so it cannot leak into the app.
  * Fonts (Inter Tight, JetBrains Mono) are already loaded by src/routes/__root.tsx.
  * Orange (#ff4d00) is hard-coded on purpose: it means "this changed" and nothing else.
  */

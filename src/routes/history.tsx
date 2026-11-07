@@ -4,12 +4,12 @@ import { History } from "lucide-react";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "History — Policy Replay" },
+      { title: "History — Retakt" },
       {
         name: "description",
         content: "History of policy versions and decision changes.",
       },
-      { property: "og:title", content: "History — Policy Replay" },
+      { property: "og:title", content: "History — Retakt" },
       {
         property: "og:description",
         content: "History of policy versions and decision changes.",

@@ -85,13 +85,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Policy Replay" },
+      { title: "Retakt" },
       {
         name: "description",
         content:
           "Reviewer app for insurance claims decided by a rules engine — replay policy v1 against v2.",
       },
-      { property: "og:title", content: "Policy Replay" },
+      { property: "og:title", content: "Retakt" },
       {
         property: "og:description",
         content:

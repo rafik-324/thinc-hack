@@ -46,7 +46,7 @@ function TopBar() {
       <Link to="/" className="flex items-center gap-2 pl-1">
         <span aria-hidden="true" className="size-2 rounded-full bg-contrast shadow-[0_0_10px_var(--contrast)]" />
         <span className="text-sm font-medium tracking-normal text-foreground">
-          Policy Replay
+          Retakt
         </span>
       </Link>
 
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className={cn("flex items-center py-4", collapsed ? "justify-center px-2" : "justify-between px-5")}>
           {!collapsed && (
             <div className="space-y-1">
-              <span className="text-lg font-medium tracking-normal text-foreground">Policy Replay</span>
+              <span className="text-lg font-medium tracking-normal text-foreground">Retakt</span>
               <p className="eyebrow">CLAIMS REVIEW</p>
             </div>
           )}

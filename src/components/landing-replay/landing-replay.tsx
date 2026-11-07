@@ -918,7 +918,7 @@ export function LandingReplay() {
       <header className="pr-nav">
         <a className="pr-nav__brand" href="#top">
           <span className="pr-nav__mark" aria-hidden />
-          Policy Replay
+          Retakt
         </a>
         <nav className="pr-nav__links" aria-label="Sections">
           <a href="#replay">Replay</a>
@@ -964,7 +964,7 @@ export function LandingReplay() {
           </div>
           <div className="pr-wrap pr-hero__bottom">
             <p className="pr-hero__lede pr-fade">
-              Policy Replay re-runs <strong>{OPEN.length} open motor claims</strong> through the new
+              Retakt re-runs <strong>{OPEN.length} open motor claims</strong> through the new
               rules and shows the reviewer exactly{" "}
               <strong>which ones need a second look, and why.</strong>
             </p>
@@ -1055,11 +1055,11 @@ export function LandingReplay() {
       <footer className="pr-footer">
         <div className="pr-wrap">
           <p>
-            Decisions come from the Policy Replay v1 engine run on the Taktile case pack (14
+            Decisions come from the Retakt v1 engine run on the Taktile case pack (14
             development and 12 practice claims). The threshold control is a what-if simulation of
             rule v1.1, not the official v2 policy, which is released on Saturday at 18:00.
           </p>
-          <p className="pr-mono">Policy Replay · 2026</p>
+          <p className="pr-mono">Retakt · 2026</p>
         </div>
       </footer>
     </div>
