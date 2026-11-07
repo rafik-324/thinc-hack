@@ -99,19 +99,19 @@
 :root {
   --radius: 1rem;
   --background: oklch(0.13 0 0);
-  --foreground: oklch(0.985 0 0);
+  --foreground: oklch(0.88 0 0);
   --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --card-foreground: oklch(0.88 0 0);
   --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.88 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.13 0 0);
   --secondary: oklch(0.23 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary-foreground: oklch(0.88 0 0);
   --muted: oklch(0.23 0 0);
-  --muted-foreground: oklch(0.65 0 0);
+  --muted-foreground: oklch(0.6 0 0);
   --accent: oklch(0.23 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.88 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
   --border: oklch(0.25 0 0);
@@ -125,11 +125,11 @@
   --chart-4: oklch(0.87 0.15 150);
   --chart-5: oklch(0.68 0.19 25);
   --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.88 0 0);
   --sidebar-primary: oklch(0.985 0 0);
   --sidebar-primary-foreground: oklch(0.13 0 0);
   --sidebar-accent: oklch(0.23 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.88 0 0);
   --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.985 0 0);
   /* Only confirm (green) and reject (red) carry colour */
@@ -152,19 +152,19 @@
 .dark {
   --radius: 1rem;
   --background: oklch(0.13 0 0);
-  --foreground: oklch(0.985 0 0);
+  --foreground: oklch(0.88 0 0);
   --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --card-foreground: oklch(0.88 0 0);
   --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.88 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.13 0 0);
   --secondary: oklch(0.23 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary-foreground: oklch(0.88 0 0);
   --muted: oklch(0.23 0 0);
-  --muted-foreground: oklch(0.65 0 0);
+  --muted-foreground: oklch(0.6 0 0);
   --accent: oklch(0.23 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.88 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
   --border: oklch(0.25 0 0);
@@ -178,11 +178,11 @@
   --chart-4: oklch(0.87 0.15 150);
   --chart-5: oklch(0.68 0.19 25);
   --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.88 0 0);
   --sidebar-primary: oklch(0.985 0 0);
   --sidebar-primary-foreground: oklch(0.13 0 0);
   --sidebar-accent: oklch(0.23 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.88 0 0);
   --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.985 0 0);
   /* Only confirm (green) and reject (red) carry colour */
@@ -217,4 +217,4 @@
 }
 
 html { color-scheme: dark; }
-h1, h2, .text-glow { text-shadow: 0 0 18px oklch(1 0 0 / 0.18); }
+h1, h2, .text-glow { text-shadow: 0 0 18px oklch(1 0 0 / 0.08); }
