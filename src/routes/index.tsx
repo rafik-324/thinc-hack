@@ -1,217 +1,94 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRightLeft, Lock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Scale } from "lucide-react";
 
-import { DecisionBadge } from "@/components/decision-badge";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  CLAIMS,
-  DECISION_LABELS,
-  DECISION_ORDER,
-  isChanged,
-  type Decision,
-} from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-store";
+import { CLAIMS, isChanged } from "@/lib/policy-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Claims Queue — Policy Replay" },
+      { title: "Policy Replay — Test policy changes before they go live" },
       {
         name: "description",
-        content: "Review insurance claims decided by the rules engine and compare policy v1 against v2.",
+        content:
+          "Replay a new policy version against past claims and see exactly which decisions change, before you ship it.",
       },
-      { property: "og:title", content: "Claims Queue — Policy Replay" },
+      { property: "og:title", content: "Policy Replay — Test policy changes before they go live" },
       {
         property: "og:description",
-        content: "Review insurance claims decided by the rules engine and compare policy v1 against v2.",
+        content:
+          "Replay a new policy version against past claims and see exactly which decisions change, before you ship it.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClaimsQueue,
+  component: LandingPage,
 });
 
-function ClaimsQueue() {
-  const navigate = useNavigate();
-  const { mode, effectiveDecision, overrides } = usePolicy();
-  const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
-  const [changedOnly, setChangedOnly] = useState(false);
-
-  const rows = useMemo(() => {
-    return CLAIMS.filter((claim) => {
-      if (statusFilter !== "all" && claim.status !== statusFilter) return false;
-      if (changedOnly && !isChanged(claim)) return false;
-      if (decisionFilter !== "all") {
-        if (mode === "compare") {
-          if (claim.decisionV1 !== decisionFilter && claim.decisionV2 !== decisionFilter) return false;
-        } else if (effectiveDecision(claim, mode) !== decisionFilter) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
+function LandingPage() {
+  const changed = CLAIMS.filter(isChanged).length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Claims Queue</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {rows.length} of {CLAIMS.length} claims · decisions shown for{" "}
-          {mode === "compare" ? "policy v1 and v2" : `policy ${mode}`}
-        </p>
-      </div>
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex items-center justify-between border-b border-border px-8 py-5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Scale className="h-4 w-4" />
+          </div>
+          <span className="text-base font-semibold tracking-tight text-foreground">
+            Policy Replay
+          </span>
+        </div>
+        <span className="font-mono text-xs text-muted-foreground">v1 → v2</span>
+      </header>
 
-      <Card>
-        <CardContent className="flex flex-wrap items-end gap-6 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="decision-filter">Decision</Label>
-            <Select
-              value={decisionFilter}
-              onValueChange={(v) => setDecisionFilter(v as Decision | "all")}
-            >
-              <SelectTrigger id="decision-filter" className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All decisions</SelectItem>
-                {DECISION_ORDER.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {DECISION_LABELS[d]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="status-filter">Status</Label>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
-            >
-              <SelectTrigger id="status-filter" className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2 pb-1">
-            <Switch id="changed-filter" checked={changedOnly} onCheckedChange={setChangedOnly} />
-            <Label htmlFor="changed-filter">Changed by v2</Label>
-          </div>
-        </CardContent>
-      </Card>
+      <main className="flex flex-1 items-center px-8">
+        <div className="mx-auto w-full max-w-3xl py-16">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Decision intelligence for claims teams
+          </p>
+          <h1 className="mt-4 text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+            Know what a policy change does before it goes live.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+            Policy Replay runs your new rules version against past claims and shows you exactly
+            which decisions flip, what it costs, and where reviewers need to look — before you
+            ship it.
+          </p>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Claim ID</TableHead>
-              <TableHead>Claimant</TableHead>
-              {mode === "compare" ? (
-                <>
-                  <TableHead>Decision v1</TableHead>
-                  <TableHead>Decision v2</TableHead>
-                </>
-              ) : (
-                <TableHead>Decision</TableHead>
-              )}
-              <TableHead>Rule</TableHead>
-              <TableHead className="w-1/3">Decisive fact</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((claim) => {
-              const changed = isChanged(claim);
-              const overridden = overrides.some((o) => o.claimId === claim.id);
-              return (
-                <TableRow
-                  key={claim.id}
-                  className="cursor-pointer"
-                  onClick={() =>
-                    navigate({ to: "/claims/$claimId", params: { claimId: claim.id } })
-                  }
-                >
-                  <TableCell className="font-medium text-foreground">{claim.id}</TableCell>
-                  <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
-                  {mode === "compare" ? (
-                    <>
-                      <TableCell>
-                        <DecisionBadge decision={claim.decisionV1} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <DecisionBadge decision={claim.decisionV2} />
-                          {changed && (
-                            <ArrowRightLeft className="h-3.5 w-3.5 text-decision-specialist" />
-                          )}
-                        </div>
-                      </TableCell>
-                    </>
-                  ) : (
-                    <TableCell>
-                      <DecisionBadge decision={effectiveDecision(claim, mode)} />
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <Badge variant="outline">{claim.rule}</Badge>
-                  </TableCell>
-                  <TableCell className="max-w-md">
-                    <span className="line-clamp-2 text-sm text-muted-foreground">
-                      {claim.decisiveFact}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {claim.status === "closed" ? (
-                        <Badge variant="secondary" className="gap-1">
-                          <Lock className="h-3 w-3" /> Closed
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">Open</Badge>
-                      )}
-                      {overridden && <Badge variant="outline">Overridden</Badge>}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  No claims match the current filters.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Link
+              to="/queue"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Analyse starten
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <span className="font-mono text-xs text-muted-foreground">
+              {CLAIMS.length} claims loaded · {changed} decisions change under v2
+            </span>
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
+            <div className="bg-card p-6">
+              <p className="font-mono text-2xl font-medium text-foreground">{CLAIMS.length}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Past claims replayed</p>
+            </div>
+            <div className="bg-card p-6">
+              <p className="font-mono text-2xl font-medium text-foreground">{changed}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Decisions changed by v2</p>
+            </div>
+            <div className="bg-card p-6">
+              <p className="font-mono text-2xl font-medium text-foreground">8% → 3.2%</p>
+              <p className="mt-1 text-sm text-muted-foreground">Error rate, v1 to v2</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-t border-border px-8 py-4">
+        <p className="text-xs text-muted-foreground">Claims review prototype · demo data</p>
+      </footer>
     </div>
   );
 }
