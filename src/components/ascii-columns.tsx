@@ -1,24 +1,32 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Procedural ASCII colonnade: three fluted columns with leafy capitals, drawn
- * as a grid of monospace glyphs on a canvas. Density per cell comes from a
- * simple column model (abacus, capital, necking, fluted shaft) plus value
- * noise for weathering. A slow scan band sweeps down to hint at "replay".
+ * Dot-matrix colonnade: three slender fluted columns with ragged, leafy
+ * capitals, drawn as tiny dots on a canvas. Each cell on a fine grid gets a
+ * density; a dot is placed when a per-cell hash falls below it (dithering),
+ * so shading reads through dot spacing, not dot size.
+ * A slow scan band sweeps down to hint at "replay".
  */
 
-const RAMP = ".·:-=+*#%@";
-const CELL_W = 6;
-const CELL_H = 8;
-const LEVELS = 8;
+const CELL = 3;
+const DOT = 1.3;
+const LEVELS = 6;
 
-type Column = { cx: number; w: number; top: number; depth: number };
+type Column = {
+  cx: number; // shaft centre, fraction of width
+  w: number; // shaft half-width, fraction of width
+  capTop: number; // top of capital, fraction of height
+  neck: number; // bottom of capital, fraction of height
+  capL: number; // capital extent left of centre, fraction of width
+  capR: number; // capital extent right of centre, fraction of width
+  seed: number;
+};
 
-// Fractions of the canvas width/height. Middle column sits further back.
+// Two tall columns cut by the top edge, one shorter column set back in the middle.
 const COLUMNS: Column[] = [
-  { cx: 0.2, w: 0.075, top: 0.06, depth: 1 },
-  { cx: 0.55, w: 0.056, top: 0.2, depth: 0.78 },
-  { cx: 0.88, w: 0.075, top: 0.06, depth: 1 },
+  { cx: 0.13, w: 0.046, capTop: -0.02, neck: 0.15, capL: 0.11, capR: 0.19, seed: 1 },
+  { cx: 0.5, w: 0.042, capTop: 0.14, neck: 0.28, capL: 0.1, capR: 0.14, seed: 2 },
+  { cx: 0.82, w: 0.05, capTop: -0.02, neck: 0.17, capL: 0.11, capR: 0.16, seed: 3 },
 ];
 
 function hash(x: number, y: number) {
@@ -45,82 +53,115 @@ function fbm(x: number, y: number) {
   return 0.55 * noise(x, y) + 0.3 * noise(x * 2.1, y * 2.1) + 0.15 * noise(x * 4.3, y * 4.3);
 }
 
-function columnDensity(px: number, py: number, col: Column, W: number, H: number) {
-  const w = col.w * W;
-  const cx = col.cx * W;
-  const top = col.top * H;
-  const dx = px - cx;
-  const dy = py - top;
-  if (dy < 0) return 0;
-
-  const abacus = w * 0.28;
-  const capH = w * 2.1;
-  const neck = w * 0.18;
-
-  // Abacus: flat slab on top.
-  if (dy < abacus) {
-    if (Math.abs(dx) > w * 1.8) return 0;
-    return 0.7 + 0.3 * fbm(px * 0.09, py * 0.09);
-  }
-
-  // Capital: leafy, flaring mass, ragged edge.
-  if (dy < abacus + capH) {
-    const t = (dy - abacus) / capH;
-    const n = fbm(px * 0.055 + col.cx * 40, py * 0.055);
-    const half = w * (1.9 - 0.85 * Math.pow(t, 0.7)) * (0.8 + 0.4 * n);
-    if (Math.abs(dx) > half) return 0;
-    const leaf = fbm(px * 0.12, py * 0.12 + col.cx * 13);
-    if (leaf < 0.3) return 0.12;
-    return 0.45 + 0.75 * leaf;
-  }
-
-  // Necking ring.
-  if (dy < abacus + capH + neck) {
-    if (Math.abs(dx) > w * 1.08) return 0;
-    return 0.8;
-  }
-
-  // Shaft: shaded cylinder with flutes and weathering.
-  const u = dx / w;
-  if (Math.abs(u) > 1) return 0;
-  const round = Math.sqrt(1 - u * u);
-  const lit = 0.45 + 0.75 * round * (0.8 - 0.25 * u);
-  const flute = 0.5 + 0.5 * Math.cos(u * Math.PI * 9);
-  const weather = fbm(px * 0.035, py * 0.012 + col.cx * 7);
-  let d = lit * (0.45 + 0.55 * flute);
-  if (weather < 0.26) d *= 0.35;
-  // Fade towards the floor.
-  const fade = Math.min(1, Math.max(0.35, 1.15 - (py / H) * 0.6));
-  return d * fade;
+function smooth(a: number, b: number, x: number) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
 }
 
-type Cell = { x: number; y: number; d: number; phase: number; glyph: number };
+function columnDensity(px: number, py: number, col: Column, W: number, H: number) {
+  const cx = col.cx * W;
+  const w = col.w * W;
+  const capTop = col.capTop * H;
+  const neck = col.neck * H;
+  const dx = px - cx;
+  const u = dx / w;
 
-function buildCells(W: number, H: number): Cell[] {
-  const cells: Cell[] = [];
-  const cols = Math.ceil(W / CELL_W);
-  const rows = Math.ceil(H / CELL_H);
+  // Capital: abacus slab, volutes and tiers of acanthus leaves in a bell
+  // that narrows into the shaft.
+  if (py >= capTop && py < neck) {
+    const capH = neck - capTop;
+    const t = (py - capTop) / capH; // 0 top .. 1 bottom
+    const bell = 1 - Math.pow(t, 1.6);
+    const ragL = 0.75 + 0.4 * fbm(py * 0.04, col.seed * 7.1);
+    const ragR = 0.75 + 0.4 * fbm(py * 0.04 + 50, col.seed * 3.3);
+    const left = col.capL * W * bell * ragL + w * 1.15 * (1 - bell);
+    const right = col.capR * W * bell * ragR + w * 1.15 * (1 - bell);
+    if (dx < -left || dx > right) return 0;
+
+    // Abacus: thin bright slab on top.
+    if (t < 0.07) return 0.85;
+    // Astragal: double ring just above the shaft.
+    if (t > 0.9) return Math.abs(u) < 1.15 ? (t > 0.95 ? 0.95 : 0.45) : 0;
+
+    // Volutes: spiral curls under both corners of the abacus.
+    const span = (dx < 0 ? left : right) * 0.78;
+    const vx = Math.abs(dx) - span;
+    const vy = py - (capTop + capH * 0.2);
+    const vr = Math.hypot(vx, vy) / (capH * 0.17);
+    if (vr < 1) {
+      const spiral = Math.cos(vr * Math.PI * 4 - Math.atan2(vy, vx));
+      return spiral > 0.2 ? 0.95 : 0.15;
+    }
+
+    // Acanthus: tiers of pointed leaves, each with a bright midrib.
+    const tier = t * 3;
+    const tierT = tier - Math.floor(tier); // 0 leaf tip .. 1 leaf base
+    const leafW = w * 0.55;
+    const lx = (dx + Math.floor(tier) * leafW * 0.5) / leafW;
+    const lf = lx - Math.round(lx); // -0.5 .. 0.5 across one leaf
+    const leafEdge = 0.15 + 0.35 * tierT; // leaves widen towards their base
+    const inLeaf = Math.abs(lf) < leafEdge;
+    const midrib = Math.abs(lf) < 0.05;
+    const tex = fbm(px * 0.09 + col.seed * 17, py * 0.09);
+    if (midrib && tierT > 0.15) return 0.95;
+    if (inLeaf) return 0.4 + 0.5 * tex;
+    return 0.06 + 0.2 * tex;
+  }
+
+  if (py < neck) return 0;
+
+  // Base: two torus rings and a plinth flaring out at the floor.
+  const baseTop = H * 0.93;
+  if (py > baseTop) {
+    const b = (py - baseTop) / (H - baseTop);
+    const half = w * (1.1 + 0.6 * smooth(0, 1, b));
+    if (Math.abs(dx) > half) return 0;
+    const ring = Math.abs(Math.sin(b * Math.PI * 3));
+    return 0.35 + 0.6 * ring;
+  }
+
+  if (Math.abs(u) > 1) return 0;
+
+  // Shaft: lit left edge, flutes with bright ridges and dark channels,
+  // shadowed right side, a crisp outline.
+  if (u < -0.9 || u > 0.94) return 0.85;
+  const light = 1 - (u + 1) / 2; // 1 on the lit side .. 0 in shadow
+  const flutes = 12;
+  const f = ((u + 1) / 2) * flutes;
+  const dist = Math.abs(f - Math.round(f)); // 0 on a ridge .. 0.5 in a channel
+  const ridge = 1 - smooth(0.04, 0.2, dist);
+  const weather = noise(Math.round(f) * 3.7 + col.seed * 11, py * 0.02);
+  let d = 0.08 + 0.75 * ridge * (0.45 + 0.55 * light);
+  if (weather < 0.28) d *= 0.4;
+  // Broad highlight band down the lit side.
+  if (u < -0.55) d = Math.max(d, 0.55 + 0.35 * smooth(-0.55, -0.85, u));
+  return d;
+}
+
+type Dot = { x: number; y: number; b: number; phase: number };
+
+function buildDots(W: number, H: number): Dot[] {
+  const dots: Dot[] = [];
+  const cols = Math.ceil(W / CELL);
+  const rows = Math.ceil(H / CELL);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const px = c * CELL_W + CELL_W / 2;
-      const py = r * CELL_H + CELL_H / 2;
+      const px = c * CELL + CELL / 2;
+      const py = r * CELL + CELL / 2;
       let d = 0;
       for (const col of COLUMNS) {
-        d = Math.max(d, columnDensity(px, py, col, W, H) * col.depth);
+        d = Math.max(d, columnDensity(px, py, col, W, H));
       }
-      // Stray dust around the capitals and along the floor.
-      if (d === 0) {
-        const near = COLUMNS.some(
-          (col) => Math.abs(px - col.cx * W) < col.w * W * 2.6 && py < (col.top + 0.35) * H,
-        );
-        const h = hash(c * 7 + 3, r * 13 + 1);
-        if ((near && h > 0.94) || h > 0.997) d = 0.12 + 0.25 * hash(c, r);
-      }
-      if (d < 0.06) continue;
-      cells.push({ x: px, y: py, d, phase: hash(c + 99, r + 7) * Math.PI * 2, glyph: hash(r, c) });
+      if (d <= 0 || hash(c, r) > d) continue;
+      dots.push({
+        x: c * CELL + (CELL - DOT) / 2,
+        y: py,
+        b: 0.55 + 0.45 * Math.min(1, d),
+        phase: hash(c + 99, r + 7) * Math.PI * 2,
+      });
     }
   }
-  return cells;
+  return dots;
 }
 
 export function AsciiColumns({ className }: { className?: string }) {
@@ -133,27 +174,12 @@ export function AsciiColumns({ className }: { className?: string }) {
     if (!ctx) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let cells: Cell[] = [];
+    let dots: Dot[] = [];
     let W = 0;
     let H = 0;
     let raf = 0;
     let last = 0;
-    const buckets: Cell[][] = Array.from({ length: LEVELS }, () => []);
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = rect.width;
-      H = rect.height;
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.font = `${CELL_H}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      cells = buildCells(W, H);
-      draw(performance.now());
-    };
+    const buckets: Dot[][] = Array.from({ length: LEVELS }, () => []);
 
     const draw = (now: number) => {
       const t = now / 1000;
@@ -163,31 +189,36 @@ export function AsciiColumns({ className }: { className?: string }) {
       // Scan band sweeping top to bottom every ~22s.
       const scanY = ((t / 22) % 1) * (H + 200) - 100;
 
-      for (const cell of cells) {
-        let b = cell.d;
+      for (const dot of dots) {
+        let b = dot.b;
         if (!reduceMotion) {
-          b *= 0.82 + 0.18 * Math.sin(t * 0.5 + cell.phase);
-          const dist = Math.abs(cell.y - scanY);
-          if (dist < 60) b += (1 - dist / 60) * 0.35;
+          b *= 0.85 + 0.15 * Math.sin(t * 0.5 + dot.phase);
+          const dist = Math.abs(dot.y - scanY);
+          if (dist < 70) b += (1 - dist / 70) * 0.3;
         }
         const level = Math.min(LEVELS - 1, Math.floor(Math.min(1, b) * LEVELS));
-        buckets[level]?.push(cell);
+        buckets[level]?.push(dot);
       }
 
       for (let l = 0; l < LEVELS; l++) {
         const bucket = buckets[l];
         if (!bucket?.length) continue;
-        const alpha = 0.15 + (0.45 * (l + 1)) / LEVELS;
-        ctx.fillStyle = `rgba(145, 145, 145, ${alpha.toFixed(3)})`;
-        for (const cell of bucket) {
-          const spread = Math.floor(cell.glyph * 3) - 1;
-          const idx = Math.max(
-            0,
-            Math.min(RAMP.length - 1, Math.floor((l / LEVELS) * RAMP.length) + spread),
-          );
-          ctx.fillText(RAMP.charAt(idx), cell.x, cell.y);
-        }
+        const alpha = 0.3 + (0.6 * (l + 1)) / LEVELS;
+        ctx.fillStyle = `rgba(175, 175, 175, ${alpha.toFixed(3)})`;
+        for (const dot of bucket) ctx.fillRect(dot.x, dot.y - DOT / 2, DOT, DOT);
       }
+    };
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = rect.width;
+      H = rect.height;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      dots = buildDots(W, H);
+      draw(performance.now());
     };
 
     const loop = (now: number) => {
