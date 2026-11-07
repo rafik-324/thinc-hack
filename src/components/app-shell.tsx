@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { ClipboardList, Gauge, History, LayoutDashboard, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -26,10 +26,14 @@ const VERSION_LABELS: Record<VersionMode, string> = {
   compare: "v1 vs v2",
 };
 
-const PANEL_TABS = ["overview", "update", "history"] as const;
+const PANEL_TABS = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "update", label: "Update", icon: RefreshCw },
+  { id: "history", label: "History", icon: History },
+] as const;
 
 function TopBar() {
-  const { mode, setMode, tab, setTab } = usePolicy();
+  const { mode, setMode } = usePolicy();
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
@@ -52,23 +56,6 @@ function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <div className="flex gap-1">
-          {PANEL_TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
-                tab === t
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
         <span className="eyebrow hidden sm:block">Policy Version</span>
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
@@ -99,6 +86,7 @@ function TopBar() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const { tab, setTab } = usePolicy();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
 
   return (
@@ -128,6 +116,32 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         <nav className={cn("flex-1 space-y-1 py-2", collapsed ? "px-2" : "px-3")}>
+          {!collapsed && <p className="eyebrow px-3 pb-1 pt-2">Ansicht</p>}
+          {PANEL_TABS.map((item) => {
+            const active = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                aria-current={active ? "true" : undefined}
+                title={collapsed ? item.label : undefined}
+                className={cn(
+                  "relative flex w-full items-center gap-3 rounded-sm py-2 text-sm font-medium transition-colors",
+                  collapsed ? "justify-center px-0" : "px-3",
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                  active && collapsed && "bg-foreground/10",
+                )}
+              >
+                {active && !collapsed && (
+                  <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />
+                )}
+                <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
+                {!collapsed && item.label}
+              </button>
+            );
+          })}
+          {!collapsed && <p className="eyebrow px-3 pb-1 pt-4">Seiten</p>}
           {NAV_ITEMS.map((item) => {
             const active = currentPath === item.url;
             return (
@@ -142,9 +156,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
+                  active && collapsed && "bg-foreground/10",
                 )}
               >
-                {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
+                {active && !collapsed && (
+                  <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />
+                )}
                 <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
                 {!collapsed && item.title}
               </Link>
