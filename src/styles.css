@@ -99,19 +99,19 @@
 :root {
   --radius: 1rem;
   --background: oklch(0.13 0 0);
-  --foreground: oklch(0.88 0 0);
+  --foreground: oklch(0.95 0 0);
   --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.88 0 0);
+  --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.88 0 0);
+  --popover-foreground: oklch(0.95 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.13 0 0);
   --secondary: oklch(0.23 0 0);
-  --secondary-foreground: oklch(0.88 0 0);
+  --secondary-foreground: oklch(0.95 0 0);
   --muted: oklch(0.23 0 0);
-  --muted-foreground: oklch(0.6 0 0);
+  --muted-foreground: oklch(0.68 0 0);
   --accent: oklch(0.23 0 0);
-  --accent-foreground: oklch(0.88 0 0);
+  --accent-foreground: oklch(0.95 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
   --border: oklch(0.3 0 0);
@@ -119,18 +119,18 @@
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
-  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.05), 0 0 10px oklch(1 0 0 / 0.04), inset 0 0 16px oklch(1 0 0 / 0.02);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
   --chart-4: oklch(0.87 0.15 150);
   --chart-5: oklch(0.68 0.19 25);
   --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.88 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.985 0 0);
   --sidebar-primary-foreground: oklch(0.13 0 0);
   --sidebar-accent: oklch(0.23 0 0);
-  --sidebar-accent-foreground: oklch(0.88 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.985 0 0);
   /* Only confirm (green) and reject (red) carry colour */
@@ -153,19 +153,19 @@
 .dark {
   --radius: 1rem;
   --background: oklch(0.13 0 0);
-  --foreground: oklch(0.88 0 0);
+  --foreground: oklch(0.95 0 0);
   --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.88 0 0);
+  --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.88 0 0);
+  --popover-foreground: oklch(0.95 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.13 0 0);
   --secondary: oklch(0.23 0 0);
-  --secondary-foreground: oklch(0.88 0 0);
+  --secondary-foreground: oklch(0.95 0 0);
   --muted: oklch(0.23 0 0);
-  --muted-foreground: oklch(0.6 0 0);
+  --muted-foreground: oklch(0.68 0 0);
   --accent: oklch(0.23 0 0);
-  --accent-foreground: oklch(0.88 0 0);
+  --accent-foreground: oklch(0.95 0 0);
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.13 0 0);
   --border: oklch(0.3 0 0);
@@ -173,18 +173,18 @@
   --ring: oklch(0.985 0 0);
   --contrast: oklch(0.985 0 0);
   --glow: 0 0 24px oklch(1 0 0 / 0.12);
-  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.09), 0 0 16px oklch(1 0 0 / 0.08), inset 0 0 22px oklch(1 0 0 / 0.035);
+  --edge-glow: 0 0 0 1px oklch(1 0 0 / 0.05), 0 0 10px oklch(1 0 0 / 0.04), inset 0 0 16px oklch(1 0 0 / 0.02);
   --chart-1: oklch(0.985 0 0);
   --chart-2: oklch(0.75 0 0);
   --chart-3: oklch(0.55 0 0);
   --chart-4: oklch(0.87 0.15 150);
   --chart-5: oklch(0.68 0.19 25);
   --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.88 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.985 0 0);
   --sidebar-primary-foreground: oklch(0.13 0 0);
   --sidebar-accent: oklch(0.23 0 0);
-  --sidebar-accent-foreground: oklch(0.88 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.985 0 0);
   /* Only confirm (green) and reject (red) carry colour */
@@ -219,7 +219,7 @@
 }
 
 html { color-scheme: dark; }
-h1, h2, .text-glow { text-shadow: 0 0 18px oklch(1 0 0 / 0.08); }
+h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
 
 /* Glowing edges: every bordered surface and small control carries a soft rim light. */
 .bg-card.border {
