@@ -46,7 +46,7 @@ function FieldSelect({
   onChange: (value: string) => void;
 }) {
   return (
-    <Select value={value || undefined} onValueChange={onChange}>
+    <Select {...(value ? { value } : {})} onValueChange={onChange}>
       <SelectTrigger id={id} className="h-9 w-full rounded-sm font-mono text-sm">
         <SelectValue placeholder="—" />
       </SelectTrigger>
