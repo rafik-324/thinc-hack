@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { ClipboardList, Gauge, History, LayoutDashboard, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -26,10 +26,14 @@ const VERSION_LABELS: Record<VersionMode, string> = {
   compare: "v1 vs v2",
 };
 
-const PANEL_TABS = ["overview", "update", "history"] as const;
+const PANEL_TABS = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "update", label: "Update", icon: RefreshCw },
+  { id: "history", label: "History", icon: History },
+] as const;
 
 function TopBar() {
-  const { mode, setMode, tab, setTab } = usePolicy();
+  const { mode, setMode } = usePolicy();
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
@@ -52,23 +56,6 @@ function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <div className="flex gap-1">
-          {PANEL_TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
-                tab === t
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
         <span className="eyebrow hidden sm:block">Policy Version</span>
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
