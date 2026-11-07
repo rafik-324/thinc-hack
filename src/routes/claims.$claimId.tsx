@@ -35,7 +35,7 @@ import {
   isChanged,
   type Decision,
 } from "@/lib/policy-data";
-import { usePolicy } from "@/lib/policy-store";
+import { usePolicy } from "@/lib/policy-context";
 
 export const Route = createFileRoute("/claims/$claimId")({
   loader: ({ params }) => {

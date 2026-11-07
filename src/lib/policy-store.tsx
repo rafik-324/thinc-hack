@@ -1,30 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import type { Claim, Decision, VersionMode } from "@/lib/policy-data";
-
-export interface Override {
-  id: string;
-  claimId: string;
-  previousDecision: Decision;
-  newDecision: Decision;
-  reason: string;
-  reviewer: string;
-  at: string;
-}
-
-export type PanelTab = "overview" | "update" | "history";
-
-interface PolicyState {
-  mode: VersionMode;
-  setMode: (mode: VersionMode) => void;
-  tab: PanelTab;
-  setTab: (tab: PanelTab) => void;
-  overrides: Override[];
-  addOverride: (override: Omit<Override, "id" | "at">) => void;
-  overridesFor: (claimId: string) => Override[];
-  effectiveDecision: (claim: Claim, version: "v1" | "v2") => Decision;
-}
-
-const PolicyContext = createContext<PolicyState | null>(null);
+import { useMemo, useState, type ReactNode } from "react";
+import type { VersionMode } from "@/lib/policy-data";
+import { PolicyContext, type Override, type PanelTab, type PolicyState } from "@/lib/policy-context";
 
 const SEED_OVERRIDES: Override[] = [
   {
@@ -75,10 +51,4 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
   );
 
   return <PolicyContext.Provider value={value}>{children}</PolicyContext.Provider>;
-}
-
-export function usePolicy(): PolicyState {
-  const ctx = useContext(PolicyContext);
-  if (!ctx) throw new Error("usePolicy must be used inside PolicyProvider");
-  return ctx;
 }
