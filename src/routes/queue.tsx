@@ -36,12 +36,12 @@ export const Route = createFileRoute("/queue")({
   },
   head: () => ({
     meta: [
-      { title: "Claims Queue — Policy Replay" },
+      { title: "Claims Queue — Retakt" },
       {
         name: "description",
         content: "Review insurance claims decided by the rules engine under the current policy version.",
       },
-      { property: "og:title", content: "Claims Queue — Policy Replay" },
+      { property: "og:title", content: "Claims Queue — Retakt" },
       {
         property: "og:description",
         content: "Review insurance claims decided by the rules engine under the current policy version.",

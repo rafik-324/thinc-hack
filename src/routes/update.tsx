@@ -44,13 +44,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/update")({
   head: () => ({
     meta: [
-      { title: "Policy Update — Policy Replay" },
+      { title: "Policy Update — Retakt" },
       {
         name: "description",
         content:
           "Compare policy v1 against v2: KPIs, decision heatmap, changed claims and audit trail.",
       },
-      { property: "og:title", content: "Policy Update — Policy Replay" },
+      { property: "og:title", content: "Policy Update — Retakt" },
       {
         property: "og:description",
         content:
@@ -352,7 +352,7 @@ function PolicyUpdate() {
         </Card>
         <Card className="border-decision-fast/40">
           <CardHeader>
-            <CardTitle className="text-base">Policy Replay</CardTitle>
+            <CardTitle className="text-base">Retakt</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-3xl font-mono tabular-nums font-medium text-decision-fast">
