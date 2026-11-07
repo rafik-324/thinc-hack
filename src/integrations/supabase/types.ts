@@ -38,6 +38,44 @@ export type Database = {
         }
         Relationships: []
       }
+      claim_field_changes: {
+        Row: {
+          case_id: string
+          created_at: string
+          editor: string
+          field: string
+          id: number
+          new_value: Json | null
+          old_value: Json | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          editor: string
+          field: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          editor?: string
+          field?: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_field_changes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["case_id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           case_id: string
@@ -269,6 +307,10 @@ export type Database = {
         Returns: string
       }
       submit_claim_intake: { Args: { p_payload: Json }; Returns: Json }
+      update_claim_fields: {
+        Args: { p_case_id: string; p_editor: string; p_fields: Json }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

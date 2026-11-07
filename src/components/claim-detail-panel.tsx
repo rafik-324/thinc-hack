@@ -2,6 +2,7 @@ import { ArrowRight, Lock, PencilLine } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ClaimFieldsEditor } from "@/components/claim-fields-editor";
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,6 +174,8 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
             </ul>
           </div>
         )}
+
+        {claim.live && <ClaimFieldsEditor key={claim.id} caseId={claim.id} />}
       </div>
 
       <div className="shrink-0 border-t border-border p-4">
