@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PolicyImpactRouteImport } from './routes/policy-impact'
 import { Route as QueueRouteImport } from './routes/queue'
-import { Route as ClaimsClaimIdRouteImport } from './routes/claims.$claimId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +28,35 @@ const QueueRoute = QueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClaimsClaimIdRoute = ClaimsClaimIdRouteImport.update({
-  id: '/claims/$claimId',
-  path: '/claims/$claimId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/policy-impact': typeof PolicyImpactRoute
   '/queue': typeof QueueRoute
-  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/policy-impact': typeof PolicyImpactRoute
   '/queue': typeof QueueRoute
-  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/policy-impact': typeof PolicyImpactRoute
   '/queue': typeof QueueRoute
-  '/claims/$claimId': typeof ClaimsClaimIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/policy-impact' | '/queue' | '/claims/$claimId'
+  fullPaths: '/' | '/policy-impact' | '/queue'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/policy-impact' | '/queue' | '/claims/$claimId'
-  id: '__root__' | '/' | '/policy-impact' | '/queue' | '/claims/$claimId'
+  to: '/' | '/policy-impact' | '/queue'
+  id: '__root__' | '/' | '/policy-impact' | '/queue'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PolicyImpactRoute: typeof PolicyImpactRoute
   QueueRoute: typeof QueueRoute
-  ClaimsClaimIdRoute: typeof ClaimsClaimIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,13 +82,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QueueRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/claims/$claimId': {
-      id: '/claims/$claimId'
-      path: '/claims/$claimId'
-      fullPath: '/claims/$claimId'
-      preLoaderRoute: typeof ClaimsClaimIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PolicyImpactRoute: PolicyImpactRoute,
   QueueRoute: QueueRoute,
-  ClaimsClaimIdRoute: ClaimsClaimIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
