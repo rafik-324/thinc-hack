@@ -106,6 +106,7 @@ export type Database = {
           reason: string
           request_id: string | null
           reviewer: string
+          revision: number
         }
         Insert: {
           case_id: string
@@ -117,6 +118,7 @@ export type Database = {
           reason: string
           request_id?: string | null
           reviewer: string
+          revision: number
         }
         Update: {
           case_id?: string
@@ -128,6 +130,7 @@ export type Database = {
           reason?: string
           request_id?: string | null
           reviewer?: string
+          revision?: number
         }
         Relationships: [
           {
@@ -240,7 +243,18 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      reviewer_save_correction: {
+        Args: {
+          p_case_id: string
+          p_expected_revision: number
+          p_policy_version: string
+          p_reason: string
+          p_recommendation: string
+          p_request_id: string
+          p_reviewer: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
