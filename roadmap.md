@@ -8,5 +8,5 @@
 - [x] Verify comparison, filters and claim navigation.
 
 # Claim detail styling
-- [ ] Restyle claim header, comparison, correction dialog and history without changing decisions.
-- [ ] Verify correction saving and comparison views.
+- [x] Restyle claim header, comparison, correction dialog and history without changing decisions.
+- [x] Verify correction saving and comparison views.
