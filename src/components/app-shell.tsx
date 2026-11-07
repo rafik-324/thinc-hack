@@ -156,9 +156,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
+                  active && collapsed && "bg-foreground/10",
                 )}
               >
-                {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />}
+                {active && !collapsed && (
+                  <span aria-hidden="true" className="absolute inset-y-2 left-0 w-0.5 bg-foreground" />
+                )}
                 <item.icon size={16} strokeWidth={1.5} className="shrink-0" />
                 {!collapsed && item.title}
               </Link>
