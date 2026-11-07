@@ -83,7 +83,20 @@ function ClaimsQueue() {
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
 
   const wheelLock = useRef(0);
+  const leftColRef = useRef<HTMLDivElement>(null);
   const active = rows.find((c) => c.id === selectedClaimId) ?? rows[0];
+
+  // Slow down page scrolling while the wheel is over the left column (the list).
+  useEffect(() => {
+    const el = leftColRef.current;
+    if (!el) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      window.scrollBy({ top: event.deltaY * 0.3 });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const total = CLAIMS.length;
   const changedCount = CLAIMS.filter(isChanged).length;
@@ -98,7 +111,7 @@ function ClaimsQueue() {
   return (
     <div className="space-y-3">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-3">
-        <div className="grid min-w-0 grid-cols-1 content-start gap-3">
+        <div ref={leftColRef} className="grid min-w-0 grid-cols-1 content-start gap-3">
           <div className="grid gap-4 sm:grid-cols-2">
             <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
             <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
@@ -268,7 +281,7 @@ function ClaimsQueue() {
               el = el.parentElement;
             }
             const now = Date.now();
-            if (now - wheelLock.current < 450 || Math.abs(event.deltaY) < 8) return;
+            if (now - wheelLock.current < 250 || Math.abs(event.deltaY) < 2) return;
             wheelLock.current = now;
             const idx = rows.findIndex((c) => c.id === active.id);
             const next = Math.min(rows.length - 1, Math.max(0, idx + (event.deltaY > 0 ? 1 : -1)));
@@ -278,10 +291,10 @@ function ClaimsQueue() {
         >
           {/* Two cards peeking out behind, fanned to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[2.6deg] rounded-lg border border-border bg-card opacity-50" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[3.2deg] rounded-lg border border-foreground/25 bg-card opacity-60" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.3deg] rounded-lg border border-border bg-card opacity-75" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left rotate-[1.6deg] rounded-lg border border-foreground/25 bg-card opacity-85" />
           )}
           <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
