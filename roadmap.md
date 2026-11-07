@@ -10,3 +10,7 @@
 # Claim detail styling
 - [x] Restyle claim header, comparison, correction dialog and history without changing decisions.
 - [x] Verify correction saving and comparison views.
+
+# Floating top bar
+- [x] Add a floating pill bar above the app: logo left, policy version field and Update button right.
+- [x] Verify the bar floats clear of the sidebar and that Update applies the chosen version.
