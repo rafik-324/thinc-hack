@@ -221,10 +221,8 @@
 html { color-scheme: dark; }
 h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
 
-/* Glowing edges: every bordered surface and small control carries a soft rim light. */
+/* Glowing edges: only large surfaces (cards, sidebar, top bar) carry a faint rim light;
+   small controls inside cards (badges, chips, selects, buttons) stay plain. */
 .bg-card.border {
   box-shadow: var(--edge-glow);
-}
-.rounded-sm.border:not([class*="border-decision"]) {
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08), 0 0 9px oklch(1 0 0 / 0.08);
 }
