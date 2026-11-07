@@ -147,7 +147,7 @@ function ClaimsQueue() {
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
+              Click a claim to open it in the panel · Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
             </p>
           </div>
         </div>
@@ -240,7 +240,9 @@ function ClaimsQueue() {
       </div>
       </div>
         </div>
-        <div className="min-h-80 self-start rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]" />
+        <div className="min-h-80 self-start overflow-hidden rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]">
+          {active ? <ClaimDetailPanel claim={active} /> : null}
+        </div>
       </div>
     </div>
   );
