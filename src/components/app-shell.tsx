@@ -99,6 +99,29 @@ function TopBar() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const scrollRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [atEdge, setAtEdge] = useState({ top: true, bottom: false });
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const update = () => {
+      const top = scroller.scrollTop <= 1;
+      const bottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+      setAtEdge((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    };
+
+    update();
+    scroller.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    if (contentRef.current) observer.observe(contentRef.current);
+    return () => {
+      scroller.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-background">
