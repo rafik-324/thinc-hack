@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ClaimDetailPanel } from "@/components/claim-detail-panel";
@@ -42,12 +42,12 @@ export const Route = createFileRoute("/queue")({
       { title: "Claims Queue — Policy Replay" },
       {
         name: "description",
-        content: "Review insurance claims decided by the rules engine and compare policy v1 against v2.",
+        content: "Review insurance claims decided by the rules engine under the current policy version.",
       },
       { property: "og:title", content: "Claims Queue — Policy Replay" },
       {
         property: "og:description",
-        content: "Review insurance claims decided by the rules engine and compare policy v1 against v2.",
+        content: "Review insurance claims decided by the rules engine under the current policy version.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -71,12 +71,8 @@ function ClaimsQueue() {
     return CLAIMS.filter((claim) => {
       if (statusFilter !== "all" && claim.status !== statusFilter) return false;
       if (changedOnly && !isChanged(claim)) return false;
-      if (decisionFilter !== "all") {
-        if (mode === "compare") {
-          if (claim.decisionV1 !== decisionFilter && claim.decisionV2 !== decisionFilter) return false;
-        } else if (effectiveDecision(claim, mode) !== decisionFilter) {
-          return false;
-        }
+      if (decisionFilter !== "all" && effectiveDecision(claim, mode) !== decisionFilter) {
+        return false;
       }
       return true;
     });
@@ -168,7 +164,7 @@ function ClaimsQueue() {
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Click a claim to open it in the panel · Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
+              Click a claim to open it in the panel · Decisions shown for policy <span className="font-mono">{mode}</span>
             </p>
           </div>
         </div>
@@ -178,11 +174,7 @@ function ClaimsQueue() {
             <TableRow className="bg-card hover:bg-card">
               <TableHead className="eyebrow h-10">Claim ID</TableHead>
               <TableHead className="eyebrow h-10">Claimant</TableHead>
-              {mode === "compare" ? (
-                <TableHead className="eyebrow h-10" colSpan={2}>Decision v1 → v2</TableHead>
-              ) : (
-                <TableHead className="eyebrow h-10">Decision</TableHead>
-              )}
+              <TableHead className="eyebrow h-10">Decision</TableHead>
               <TableHead className="eyebrow h-10">Rule</TableHead>
               <TableHead className="eyebrow h-10 w-1/3">Decisive fact</TableHead>
               <TableHead className="eyebrow h-10">Status</TableHead>
@@ -216,19 +208,9 @@ function ClaimsQueue() {
                 >
                   <TableCell className="font-mono tabular-nums text-sm text-foreground">{claim.id}</TableCell>
                   <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
-                  {mode === "compare" ? (
-                    <TableCell colSpan={2}>
-                      <div className="flex items-center gap-2">
-                        <DecisionBadge decision={claim.decisionV1} />
-                        <ArrowRight aria-hidden="true" size={14} className="shrink-0 text-contrast" />
-                        <DecisionBadge decision={claim.decisionV2} />
-                      </div>
-                    </TableCell>
-                  ) : (
-                    <TableCell>
-                      <DecisionBadge decision={effectiveDecision(claim, mode)} />
-                    </TableCell>
-                  )}
+                  <TableCell>
+                    <DecisionBadge decision={effectiveDecision(claim, mode)} />
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="rounded-sm font-mono tabular-nums">{claim.rule}</Badge>
                   </TableCell>
@@ -254,7 +236,7 @@ function ClaimsQueue() {
             })}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={mode === "compare" ? 7 : 6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                   No claims match the current filters.
                 </TableCell>
               </TableRow>
