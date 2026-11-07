@@ -43,8 +43,8 @@ function TopBar() {
   };
 
   return (
-    <div className="fixed inset-x-0 top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card px-4">
-      <Link to="/" className="flex items-center gap-2">
+    <div className="fixed left-3 right-3 top-3 z-30 flex h-12 items-center justify-between rounded-full border border-border bg-card px-4">
+      <Link to="/" className="flex items-center gap-2 pl-1">
         <span aria-hidden="true" className="size-2 rounded-full bg-contrast" />
         <span className="text-sm font-medium tracking-normal text-foreground">
           Policy Replay
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <TopBar />
 
-      <aside className="fixed inset-y-0 top-12 left-0 z-20 flex w-56 flex-col border-r border-border bg-card">
+      <aside className="fixed inset-y-0 top-[60px] left-0 z-20 flex w-56 flex-col border-r border-border bg-card">
         <div className="space-y-2 px-5 py-5">
           <span className="text-lg font-medium tracking-normal text-foreground">Policy Replay</span>
           <p className="eyebrow">CLAIMS REVIEW</p>
@@ -122,8 +122,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="pl-56 pt-12">
-        <header className="sticky top-12 z-10 flex h-[65px] items-center justify-between border-b border-border bg-background px-6">
+      <div className="pl-56 pt-[60px]">
+        <header className="sticky top-[60px] z-10 flex h-[65px] items-center justify-between border-b border-border bg-background px-6">
           <span className="eyebrow">{pageName}</span>
           <div className="flex items-center gap-4">
             <ToggleGroup
