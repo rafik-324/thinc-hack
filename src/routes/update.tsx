@@ -77,7 +77,6 @@ const HEAT_SHADES = [
 function PolicyUpdate() {
   const { overrides } = usePolicy();
   const changedClaims = CLAIMS.filter(isChanged);
-  const closedChanged = changedClaims.filter((c) => c.status === "closed").length;
   const matrix = decisionMatrix();
 
   const changedPerRule = RULES.map((rule) => ({
