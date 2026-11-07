@@ -85,7 +85,16 @@ function PolicyUpdate() {
     changed: changedClaims.filter((c) => c.rule === rule.id).length,
   }));
 
-  const kpis = [
+  type Kpi = {
+    label: string;
+    value: string;
+    valueClass?: string;
+    hint?: string;
+    /** Shown only while hovering the card. */
+    prevValue?: string;
+  };
+
+  const kpis: Kpi[] = [
     { label: "Total claims", value: String(CLAIMS.length) },
     { label: "Changed by v2", value: String(changedClaims.length) },
     {
@@ -97,7 +106,8 @@ function PolicyUpdate() {
     { label: "Overrides", value: String(overrides.length) },
     {
       label: "Error rate",
-      value: `${IMPACT_STATS.errorRateV1}% → ${IMPACT_STATS.errorRateV2}%`,
+      value: `${IMPACT_STATS.errorRateV2}%`,
+      prevValue: `${IMPACT_STATS.errorRateV1}%`,
       valueClass: "text-decision-fast",
     },
     {
@@ -139,26 +149,34 @@ function PolicyUpdate() {
       <PolicyUploadBar />
       <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-4">
-              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
+      <Card>
+        <CardContent className="flex flex-wrap items-stretch divide-x divide-border p-0">
+          {kpis.map((kpi) => (
+            <div
+              key={kpi.label}
+              title={kpi.hint}
+              className="group/kpi min-w-[128px] flex-1 px-4 py-2.5"
+            >
+              <p className="font-mono text-[9px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
                 {kpi.label}
               </p>
               <p
                 className={cn(
-                  "mt-2 text-[2rem] leading-none font-mono tabular-nums font-medium tracking-[-0.02em] text-foreground",
+                  "mt-1 font-mono text-base leading-none tabular-nums font-medium tracking-[-0.02em] text-foreground",
                   kpi.valueClass,
                 )}
               >
+                {kpi.prevValue && (
+                  <span className="inline-block max-w-0 translate-x-1 overflow-hidden whitespace-nowrap align-bottom opacity-0 transition-all duration-300 ease-out group-hover/kpi:max-w-[9ch] group-hover/kpi:translate-x-0 group-hover/kpi:opacity-100">
+                    {kpi.prevValue} →{" "}
+                  </span>
+                )}
                 {kpi.value}
               </p>
-              {kpi.hint && <p className="mt-2 text-[11px] text-muted-foreground">{kpi.hint}</p>}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
