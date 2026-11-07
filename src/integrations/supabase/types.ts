@@ -255,6 +255,7 @@ export type Database = {
         }
         Returns: string
       }
+      submit_claim_intake: { Args: { p_payload: Json }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
