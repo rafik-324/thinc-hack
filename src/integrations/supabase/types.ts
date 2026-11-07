@@ -243,6 +243,15 @@ export type Database = {
       }
     }
     Functions: {
+      claim_evidence_io: {
+        Args: {
+          p_action: string
+          p_data: Json
+          p_service: string
+          p_token: string
+        }
+        Returns: Json
+      }
       claim_intake_link: {
         Args: { p_action: string; p_data: Json; p_token: string }
         Returns: Json
