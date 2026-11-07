@@ -272,7 +272,8 @@ function ClaimsQueue() {
             wheelLock.current = now;
             const idx = rows.findIndex((c) => c.id === active.id);
             const next = Math.min(rows.length - 1, Math.max(0, idx + (event.deltaY > 0 ? 1 : -1)));
-            if (next !== idx) selectClaim(rows[next].id);
+            const target = rows[next];
+            if (next !== idx && target) selectClaim(target.id);
           }}
         >
           {/* Two cards peeking out behind, fanned slightly to the right */}
