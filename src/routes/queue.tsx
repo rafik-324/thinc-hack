@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -61,7 +59,6 @@ function ClaimsQueue() {
   const { claims: CLAIMS, order: DECISION_ORDER, isLoading, error } = useClaimSource();
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
-  const [changedOnly, setChangedOnly] = useState(false);
 
   useEffect(() => {
     if (search.claim) selectClaim(search.claim);
@@ -70,13 +67,12 @@ function ClaimsQueue() {
   const rows = useMemo(() => {
     return CLAIMS.filter((claim) => {
       if (statusFilter !== "all" && claim.status !== statusFilter) return false;
-      if (changedOnly && !isChanged(claim)) return false;
       if (decisionFilter !== "all" && effectiveDecision(claim, mode) !== decisionFilter) {
         return false;
       }
       return true;
     });
-  }, [CLAIMS, decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
+  }, [CLAIMS, decisionFilter, statusFilter, mode, effectiveDecision]);
 
   useEffect(() => setDecisionFilter("all"), [DECISION_ORDER]);
 
@@ -138,59 +134,41 @@ function ClaimsQueue() {
             <SmallKpi label="Open claim volume" value={`€${Math.round(openVolume).toLocaleString("de-DE")}`} chip={`Ø €${Math.round(openVolume / Math.max(1, openCount)).toLocaleString("de-DE")}`} caption="Total amount of active claims" />
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-medium text-foreground">Queue filters</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{total}</span> claims shown
-                </p>
-              </div>
-              <div className="flex gap-1">
-                {(["all", "open", "closed"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatusFilter(s)}
-                    className={cn(
-                      "h-8 rounded-sm border px-3 font-mono text-xs capitalize",
-                      statusFilter === s ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="mt-5 flex flex-wrap items-end gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="decision-filter" className="eyebrow">Decision</Label>
-                <Select value={decisionFilter} onValueChange={(v) => setDecisionFilter(v as Decision | "all")}>
-                  <SelectTrigger id="decision-filter" className="w-48 rounded-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All decisions</SelectItem>
-                    {DECISION_ORDER.map((d) => (
-                      <SelectItem key={d} value={d}>{DECISION_LABELS[d]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2 pb-2">
-                <Switch id="changed-filter" checked={changedOnly} onCheckedChange={setChangedOnly} />
-                <Label htmlFor="changed-filter" className="eyebrow">Changed by v2</Label>
-              </div>
-            </div>
-          </div>
-
           <div className="rounded-lg border border-border bg-card">
-        <div className="flex items-start justify-between gap-4 p-5">
+        <div className="flex flex-wrap items-end justify-between gap-4 p-5">
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Click a claim to open it in the panel · Decisions shown for policy <span className="font-mono">{mode}</span>
+              Click a claim to open it · <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{total}</span> · policy <span className="font-mono">{mode}</span>
             </p>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+            <Select value={decisionFilter} onValueChange={(v) => setDecisionFilter(v as Decision | "all")}>
+              <SelectTrigger aria-label="Filter by decision" className="h-8 w-40 rounded-sm text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All decisions</SelectItem>
+                {DECISION_ORDER.map((d) => (
+                  <SelectItem key={d} value={d}>{DECISION_LABELS[d]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {(["all", "open", "closed"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={cn(
+                    "h-8 rounded-sm border px-2.5 font-mono text-xs capitalize",
+                    statusFilter === s ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       <div className="overflow-hidden border-t border-border">
