@@ -98,7 +98,7 @@ function PolicyUpdate() {
     { label: "Total claims", value: String(CLAIMS.length) },
     { label: "Changed by v2", value: String(changedClaims.length) },
     {
-      label: "Closed claims changed",
+      label: "Closed changed",
       value: String(closedChanged),
       valueClass: "text-decision-fast",
       hint: "Closed decisions are protected",
@@ -155,14 +155,14 @@ function PolicyUpdate() {
             <div
               key={kpi.label}
               title={kpi.hint}
-              className="group/kpi min-w-[128px] flex-1 px-4 py-2.5"
+              className="group/kpi min-w-[140px] flex-1 px-4 py-3.5"
             >
-              <p className="font-mono text-[9px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
+              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase whitespace-nowrap">
                 {kpi.label}
               </p>
               <p
                 className={cn(
-                  "mt-1 font-mono text-base leading-none tabular-nums font-medium tracking-[-0.02em] text-foreground",
+                  "mt-1.5 font-mono text-lg leading-none tabular-nums font-medium tracking-[-0.02em] text-foreground",
                   kpi.valueClass,
                 )}
               >

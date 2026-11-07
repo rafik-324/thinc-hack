@@ -8,3 +8,6 @@
 - [x] Logo unten in der Seitenleiste zentriert
 - [x] Policy-Upload-Feld nochmal etwas kleiner
 - [x] Error rate: beim Hover wird nur eine Zahl getauscht statt zwei anzuzeigen
+- [x] Upload-Sektion einklappbar
+- [x] KPI-Leiste etwas größer
+- [x] Update-Knopf: anderes Icon, heißt jetzt „Change policy"

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { ArrowRightLeft, History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -85,8 +85,8 @@ function TopBar() {
           </SelectContent>
         </Select>
         <Button size="sm" className="relative rounded-sm text-xs" onClick={apply}>
-          <RefreshCw size={14} strokeWidth={1.5} />
-          Update
+          <ArrowRightLeft size={14} strokeWidth={1.5} />
+          Change policy
           {dirty && (
             <span aria-hidden="true" className="absolute -right-1 -top-1 size-1.5 rounded-full bg-contrast" />
           )}
