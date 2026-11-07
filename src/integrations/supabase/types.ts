@@ -294,6 +294,14 @@ export type Database = {
         Args: { p_action: string; p_data: Json; p_token: string }
         Returns: Json
       }
+      claim_staff_correct: {
+        Args: { p_data: Json; p_reference: string; p_service: string }
+        Returns: Json
+      }
+      claim_staff_read: {
+        Args: { p_action: string; p_data: Json; p_service: string }
+        Returns: Json
+      }
       reviewer_save_correction: {
         Args: {
           p_case_id: string
