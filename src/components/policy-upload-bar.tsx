@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { usePolicies, useUploadPolicy } from "@/lib/policies";
 import { cn } from "@/lib/utils";
 
-const ACCEPT = ".txt,.md,.json,.yaml,.yml,.csv";
+const ACCEPT = "*/*";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
