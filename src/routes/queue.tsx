@@ -33,9 +33,10 @@ import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
-  validateSearch: (search: Record<string, unknown>): { claim?: string } => ({
-    claim: typeof search.claim === "string" ? search.claim : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { claim?: string } => {
+    const raw = search["claim"];
+    return typeof raw === "string" ? { claim: raw } : {};
+  },
   head: () => ({
     meta: [
       { title: "Claims Queue — Policy Replay" },

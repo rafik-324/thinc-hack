@@ -20,3 +20,4 @@
 - [x] Show the selected claim in the card: default the top row of the table, click a row to switch.
 - [x] Remove the separate claim page: the card is the only claim view, correction dialog moved into it.
 - [x] Verify row click, default selection, correction saving and the impact-page jump to a claim.
+- [ ] Every claim function lives in the card: comparison, decisive fact, explanation, correction, history.
