@@ -14,3 +14,4 @@
 # Floating top bar
 - [x] Add a floating pill bar above the app: logo left, policy version field and Update button right.
 - [x] Verify the bar floats clear of the sidebar and that Update applies the chosen version.
+- [x] Queue: right card full height, wider
