@@ -227,8 +227,32 @@ h1, h2, .text-glow { text-shadow: 0 0 14px oklch(1 0 0 / 0.05); }
   box-shadow: var(--edge-glow);
 }
 
-/* The middle column dissolves softly at its top and bottom edges while scrolling. */
+/* The middle column dissolves softly at its top and bottom edges while scrolling.
+   At the very top (or very bottom) of the list that edge's fade is removed, so the
+   content sits crisp where there is nothing left to scroll to. */
+@property --fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 28px;
+}
+@property --fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 28px;
+}
+
 #app-scroll {
-  mask-image: linear-gradient(to bottom, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+  --fade-top: 28px;
+  --fade-bottom: 28px;
+  transition: --fade-top 220ms ease, --fade-bottom 220ms ease;
+  mask-image: linear-gradient(to bottom, transparent 0, black var(--fade-top), black calc(100% - var(--fade-bottom)), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black var(--fade-top), black calc(100% - var(--fade-bottom)), transparent 100%);
+}
+
+#app-scroll[data-at-top="true"] {
+  --fade-top: 0px;
+}
+
+#app-scroll[data-at-bottom="true"] {
+  --fade-bottom: 0px;
 }

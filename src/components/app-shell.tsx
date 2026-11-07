@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,29 @@ function TopBar() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const scrollRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [atEdge, setAtEdge] = useState({ top: true, bottom: false });
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const update = () => {
+      const top = scroller.scrollTop <= 1;
+      const bottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+      setAtEdge((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    };
+
+    update();
+    scroller.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    if (contentRef.current) observer.observe(contentRef.current);
+    return () => {
+      scroller.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,7 +181,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className={cn("overflow-x-clip pt-[72px] transition-all duration-200", collapsed ? "pl-[88px]" : "pl-[248px]")}>
-        <main id="app-scroll" className="h-[calc(100vh-72px)] overflow-y-auto pl-3 pr-12 pb-8">{children}</main>
+        <main
+          id="app-scroll"
+          ref={scrollRef}
+          data-at-top={atEdge.top}
+          data-at-bottom={atEdge.bottom}
+          className="h-[calc(100vh-72px)] overflow-y-auto pl-3 pr-12 pb-8"
+        >
+          <div ref={contentRef}>{children}</div>
+        </main>
       </div>
     </div>
   );
