@@ -96,9 +96,9 @@ function ClaimsQueue() {
   const maxCount = Math.max(1, ...decisionCounts.flatMap((x) => [x.v1, x.v2]));
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
-        <div className="grid min-w-0 grid-cols-1 content-start gap-4">
+    <div className="space-y-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-3">
+        <div className="grid min-w-0 grid-cols-1 content-start gap-3">
           <div className="grid gap-4 sm:grid-cols-2">
             <KpiCard label="Claims in queue" value={total} chip={`${openCount} open`} caption="Decided by the rules engine" bars={decisionCounts.map((x) => x.v1)} max={maxCount} />
             <KpiCard label="Changed by v2" value={changedCount} chip={`${Math.round((changedCount / total) * 100)}%`} caption="Decision differs between v1 and v2" bars={decisionCounts.map((x) => x.v2)} max={maxCount} accent />
@@ -252,7 +252,7 @@ function ClaimsQueue() {
       </div>
         </div>
         <div
-          className="relative min-h-80 self-start lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]"
+          className="relative min-h-80 self-start lg:sticky lg:top-[72px] lg:h-[calc(100vh-84px)]"
           onWheel={(event) => {
             if (!active || rows.length < 2) return;
             // Let the card body scroll first; switch claims only at its edge.
@@ -275,12 +275,12 @@ function ClaimsQueue() {
             if (next !== idx) selectClaim(rows[next].id);
           }}
         >
-          {/* Two cards peeking out behind, fanned slightly to the left */}
+          {/* Two cards peeking out behind, fanned slightly to the right */}
           {rows.length > 2 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left -translate-x-2 -rotate-[2.2deg] rounded-lg border border-border bg-card opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-right translate-x-2 rotate-[2.2deg] rounded-lg border border-border bg-card opacity-60" />
           )}
           {rows.length > 1 && (
-            <div aria-hidden="true" className="absolute inset-0 origin-bottom-left -translate-x-1 -rotate-[1.1deg] rounded-lg border border-border bg-card opacity-80" />
+            <div aria-hidden="true" className="absolute inset-0 origin-bottom-right translate-x-1 rotate-[1.1deg] rounded-lg border border-border bg-card opacity-80" />
           )}
           <div key={active?.id} className="relative h-full overflow-hidden rounded-lg border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-300">
             {active ? <ClaimDetailPanel claim={active} /> : null}
