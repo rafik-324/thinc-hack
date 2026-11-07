@@ -85,7 +85,16 @@ function PolicyUpdate() {
     changed: changedClaims.filter((c) => c.rule === rule.id).length,
   }));
 
-  const kpis = [
+  type Kpi = {
+    label: string;
+    value: string;
+    valueClass?: string;
+    hint?: string;
+    /** Shown only while hovering the card. */
+    prevValue?: string;
+  };
+
+  const kpis: Kpi[] = [
     { label: "Total claims", value: String(CLAIMS.length) },
     { label: "Changed by v2", value: String(changedClaims.length) },
     {
@@ -97,7 +106,8 @@ function PolicyUpdate() {
     { label: "Overrides", value: String(overrides.length) },
     {
       label: "Error rate",
-      value: `${IMPACT_STATS.errorRateV1}% → ${IMPACT_STATS.errorRateV2}%`,
+      value: `${IMPACT_STATS.errorRateV2}%`,
+      prevValue: `${IMPACT_STATS.errorRateV1}%`,
       valueClass: "text-decision-fast",
     },
     {
@@ -145,7 +155,7 @@ function PolicyUpdate() {
             <div
               key={kpi.label}
               title={kpi.hint}
-              className="min-w-[128px] flex-1 px-4 py-2.5"
+              className="group/kpi min-w-[128px] flex-1 px-4 py-2.5"
             >
               <p className="font-mono text-[9px] font-medium tracking-[0.04em] text-muted-foreground uppercase">
                 {kpi.label}
@@ -156,6 +166,11 @@ function PolicyUpdate() {
                   kpi.valueClass,
                 )}
               >
+                {kpi.prevValue && (
+                  <span className="inline-block max-w-0 translate-x-1 overflow-hidden whitespace-nowrap align-bottom opacity-0 transition-all duration-300 ease-out group-hover/kpi:max-w-[9ch] group-hover/kpi:translate-x-0 group-hover/kpi:opacity-100">
+                    {kpi.prevValue} →{" "}
+                  </span>
+                )}
                 {kpi.value}
               </p>
             </div>
