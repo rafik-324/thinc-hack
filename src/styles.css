@@ -151,9 +151,9 @@
   --decision-reject: oklch(0.68 0.19 25);
   --decision-reject-soft: oklch(0.68 0.19 25 / 12%);
   --decision-reject-line: oklch(0.68 0.19 25 / 40%);
-  --decision-human: oklch(0.8 0.12 25);
-  --decision-human-soft: oklch(0.8 0.12 25 / 12%);
-  --decision-human-line: oklch(0.8 0.12 25 / 40%);
+  --decision-human: oklch(0.82 0.17 27);
+  --decision-human-soft: oklch(0.82 0.17 27 / 12%);
+  --decision-human-line: oklch(0.82 0.17 27 / 40%);
 }
 
 .dark {
@@ -208,9 +208,9 @@
   --decision-reject: oklch(0.68 0.19 25);
   --decision-reject-soft: oklch(0.68 0.19 25 / 12%);
   --decision-reject-line: oklch(0.68 0.19 25 / 40%);
-  --decision-human: oklch(0.8 0.12 25);
-  --decision-human-soft: oklch(0.8 0.12 25 / 12%);
-  --decision-human-line: oklch(0.8 0.12 25 / 40%);
+  --decision-human: oklch(0.82 0.17 27);
+  --decision-human-soft: oklch(0.82 0.17 27 / 12%);
+  --decision-human-line: oklch(0.82 0.17 27 / 40%);
 }
 
 @layer base {
