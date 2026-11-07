@@ -76,9 +76,9 @@ function ClaimsQueue() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Claims Queue</h1>
+        <h1 className="text-2xl font-medium tracking-normal text-foreground">Claims Queue</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {rows.length} of {CLAIMS.length} claims · decisions shown for{" "}
+          <span className="font-mono tabular-nums">{rows.length}</span> of <span className="font-mono tabular-nums">{CLAIMS.length}</span> claims · decisions shown for{" "}
           {mode === "compare" ? "policy v1 and v2" : `policy ${mode}`}
         </p>
       </div>
@@ -158,7 +158,7 @@ function ClaimsQueue() {
                     navigate({ to: "/claims/$claimId", params: { claimId: claim.id } })
                   }
                 >
-                  <TableCell className="font-medium text-foreground">{claim.id}</TableCell>
+                  <TableCell className="font-mono tabular-nums font-medium text-foreground">{claim.id}</TableCell>
                   <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
                   {mode === "compare" ? (
                     <>
@@ -180,7 +180,7 @@ function ClaimsQueue() {
                     </TableCell>
                   )}
                   <TableCell>
-                    <Badge variant="outline">{claim.rule}</Badge>
+                    <Badge variant="outline" className="font-mono tabular-nums">{claim.rule}</Badge>
                   </TableCell>
                   <TableCell className="max-w-md">
                     <span className="line-clamp-2 text-sm text-muted-foreground">

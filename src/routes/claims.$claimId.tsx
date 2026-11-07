@@ -120,9 +120,9 @@ function ClaimDetail() {
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-2xl">{claim.id}</CardTitle>
+              <CardTitle className="font-mono tabular-nums text-2xl">{claim.id}</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                {claim.claimant} · €{claim.amountEur.toLocaleString("en-US")} · Rule {claim.rule} (
+                {claim.claimant} · <span className="font-mono tabular-nums">€{claim.amountEur.toLocaleString("en-US")}</span> · Rule <span className="font-mono tabular-nums">{claim.rule}</span> (
                 {rule.name})
               </p>
             </div>
@@ -139,7 +139,7 @@ function ClaimDetail() {
           {mode === "compare" ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg border border-border bg-muted/40 p-4">
-                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
                   Policy v1
                 </p>
                 <div className="mt-2">
@@ -155,7 +155,7 @@ function ClaimDetail() {
                 }
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
                     Policy v2
                   </p>
                   {changed && (
@@ -173,7 +173,7 @@ function ClaimDetail() {
             </div>
           ) : (
             <div className="rounded-lg border border-border bg-muted/40 p-4">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
                 Decision under policy {mode}
               </p>
               <div className="mt-2">
@@ -183,7 +183,7 @@ function ClaimDetail() {
               <p className="text-sm font-medium text-foreground">Decisive fact</p>
               <p className="mt-1 text-sm text-muted-foreground">{claim.decisiveFact}</p>
               <p className="mt-3 text-sm font-medium text-foreground">
-                Policy clause ({claim.rule})
+                Policy clause (<span className="font-mono tabular-nums">{claim.rule}</span>)
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "v1" ? rule.clauseV1 : rule.clauseV2}
@@ -200,7 +200,7 @@ function ClaimDetail() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Explanation</h2>
+            <h2 className="text-sm font-medium text-foreground">Explanation</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{claim.explanation}</p>
           </div>
 
@@ -214,7 +214,7 @@ function ClaimDetail() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Correct decision for {claim.id}</DialogTitle>
+                    <DialogTitle>Correct decision for <span className="font-mono tabular-nums">{claim.id}</span></DialogTitle>
                     <DialogDescription>
                       The correction is stored for this session only and is shown in the audit
                       trail.
@@ -271,7 +271,7 @@ function ClaimDetail() {
 
           {claimOverrides.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Override history</h2>
+              <h2 className="text-sm font-medium text-foreground">Override history</h2>
               <ul className="mt-2 space-y-2">
                 {claimOverrides.map((o) => (
                   <li
@@ -282,7 +282,7 @@ function ClaimDetail() {
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                     <DecisionBadge decision={o.newDecision} />
                     <span className="text-muted-foreground">
-                      by {o.reviewer} · {new Date(o.at).toLocaleString("en-GB")}
+                      by {o.reviewer} · <span className="font-mono tabular-nums">{new Date(o.at).toLocaleString("en-GB")}</span>
                     </span>
                     <span className="w-full text-xs text-muted-foreground">{o.reason}</span>
                   </li>

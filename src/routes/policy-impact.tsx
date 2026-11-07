@@ -134,7 +134,7 @@ function PolicyImpact() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Policy Impact</h1>
+        <h1 className="text-2xl font-mono tabular-nums font-medium tracking-normal text-foreground">Policy Impact</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           What changes when the claims portfolio is replayed under policy v2 instead of v1.
         </p>
@@ -144,10 +144,10 @@ function PolicyImpact() {
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="pt-6">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              <p className="text-xs font-medium tracking-normal text-muted-foreground uppercase">
                 {kpi.label}
               </p>
-              <p className={cn("mt-2 text-2xl font-semibold text-foreground", kpi.valueClass)}>
+              <p className={cn("mt-2 text-2xl font-mono tabular-nums font-medium text-foreground", kpi.valueClass)}>
                 {kpi.value}
               </p>
               {kpi.hint && <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>}
@@ -192,7 +192,7 @@ function PolicyImpact() {
                           <td key={colDecision} className="p-1">
                             <div
                               className={cn(
-                                "flex h-12 items-center justify-center rounded-md text-sm font-semibold",
+                                "flex h-12 items-center justify-center rounded-md text-sm font-mono tabular-nums font-medium",
                                 offDiagonal
                                   ? "bg-decision-specialist/25 text-decision-specialist"
                                   : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
@@ -286,13 +286,13 @@ function PolicyImpact() {
                   <Link
                     to="/claims/$claimId"
                     params={{ claimId: claim.id }}
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
+                    className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {claim.id}
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{claim.rule}</Badge>
+                  <Badge variant="outline" className="font-mono tabular-nums">{claim.rule}</Badge>
                 </TableCell>
                 <TableCell>
                   <DecisionBadge decision={claim.decisionV1} />
@@ -315,14 +315,14 @@ function PolicyImpact() {
       </Card>
 
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">Is it correct?</h2>
+        <h2 className="text-lg font-medium tracking-normal text-foreground">Is it correct?</h2>
         <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {correctness.map((item) => (
             <Card key={item.label}>
               <CardContent className="flex items-start gap-3 pt-6">
                 <item.icon className={cn("mt-0.5 h-5 w-5", item.className)} />
                 <div>
-                  <p className="text-2xl font-semibold text-foreground">{item.count}</p>
+                  <p className="text-2xl font-mono tabular-nums font-medium text-foreground">{item.count}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                 </div>
               </CardContent>
@@ -337,14 +337,14 @@ function PolicyImpact() {
             <CardTitle className="text-base">Manual review</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-3xl font-semibold text-foreground">
+            <p className="text-3xl font-mono tabular-nums font-medium text-foreground">
               €{IMPACT_STATS.manual.costPerClaimEur}
               <span className="text-base font-normal text-muted-foreground"> / claim</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              {IMPACT_STATS.manual.minutesPerClaim} minutes per claim · €
-              {(IMPACT_STATS.manual.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")} and{" "}
-              {Math.round((IMPACT_STATS.manual.minutesPerClaim * CLAIMS.length) / 60)} hours for the
+              <span className="font-mono tabular-nums">{IMPACT_STATS.manual.minutesPerClaim}</span> minutes per claim · €
+              <span className="font-mono tabular-nums">{(IMPACT_STATS.manual.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}</span> and{" "}
+              <span className="font-mono tabular-nums">{Math.round((IMPACT_STATS.manual.minutesPerClaim * CLAIMS.length) / 60)}</span> hours for the
               whole portfolio.
             </p>
           </CardContent>
@@ -354,14 +354,14 @@ function PolicyImpact() {
             <CardTitle className="text-base">Policy Replay</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-3xl font-semibold text-decision-fast">
+            <p className="text-3xl font-mono tabular-nums font-medium text-decision-fast">
               €{IMPACT_STATS.replay.costPerClaimEur}
               <span className="text-base font-normal text-muted-foreground"> / claim</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              {IMPACT_STATS.replay.minutesPerClaim} minutes per claim · €
-              {(IMPACT_STATS.replay.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")} and
-              under 2 hours for the whole portfolio.
+              <span className="font-mono tabular-nums">{IMPACT_STATS.replay.minutesPerClaim}</span> minutes per claim · €
+              <span className="font-mono tabular-nums">{(IMPACT_STATS.replay.costPerClaimEur * CLAIMS.length).toLocaleString("en-US")}</span> and
+              under <span className="font-mono tabular-nums">2</span> hours for the whole portfolio.
             </p>
           </CardContent>
         </Card>
@@ -386,7 +386,7 @@ function PolicyImpact() {
                   <Link
                     to="/claims/$claimId"
                     params={{ claimId: o.claimId }}
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
+                    className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {o.claimId}
                   </Link>
@@ -394,7 +394,7 @@ function PolicyImpact() {
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                   <DecisionBadge decision={o.newDecision} />
                   <span className="text-muted-foreground">
-                    by {o.reviewer} · {new Date(o.at).toLocaleString("en-GB")}
+                    by {o.reviewer} · <span className="font-mono tabular-nums">{new Date(o.at).toLocaleString("en-GB")}</span>
                   </span>
                   <span className="w-full text-xs text-muted-foreground">{o.reason}</span>
                 </li>
