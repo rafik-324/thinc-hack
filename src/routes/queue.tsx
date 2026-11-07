@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Lock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { ClaimDetailPanel } from "@/components/claim-detail-panel";
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,10 @@ import { usePolicy } from "@/lib/policy-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/queue")({
+  validateSearch: (search: Record<string, unknown>): { claim?: string } => {
+    const raw = search["claim"];
+    return typeof raw === "string" ? { claim: raw } : {};
+  },
   head: () => ({
     meta: [
       { title: "Claims Queue — Policy Replay" },
@@ -52,11 +57,15 @@ export const Route = createFileRoute("/queue")({
 });
 
 function ClaimsQueue() {
-  const navigate = useNavigate();
-  const { mode, effectiveDecision, overrides } = usePolicy();
+  const { mode, effectiveDecision, overrides, selectedClaimId, selectClaim } = usePolicy();
+  const search = Route.useSearch();
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [changedOnly, setChangedOnly] = useState(false);
+
+  useEffect(() => {
+    if (search.claim) selectClaim(search.claim);
+  }, [search.claim, selectClaim]);
 
   const rows = useMemo(() => {
     return CLAIMS.filter((claim) => {
@@ -72,6 +81,8 @@ function ClaimsQueue() {
       return true;
     });
   }, [decisionFilter, statusFilter, changedOnly, mode, effectiveDecision]);
+
+  const active = rows.find((c) => c.id === selectedClaimId) ?? rows[0];
 
   const total = CLAIMS.length;
   const changedCount = CLAIMS.filter(isChanged).length;
@@ -144,7 +155,7 @@ function ClaimsQueue() {
           <div>
             <h2 className="text-lg font-medium text-foreground">All claims</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
+              Click a claim to open it in the panel · Decisions shown for {mode === "compare" ? <>policy <span className="font-mono">v1</span> and <span className="font-mono">v2</span></> : <>policy <span className="font-mono">{mode}</span></>}
             </p>
           </div>
         </div>
@@ -171,13 +182,24 @@ function ClaimsQueue() {
               return (
                 <TableRow
                   key={claim.id}
+                  tabIndex={0}
+                  aria-selected={active?.id === claim.id}
+                  data-state={active?.id === claim.id ? "selected" : undefined}
                   className={cn(
-                    "h-11 cursor-pointer hover:bg-card [&>td]:py-2",
+                    "h-11 cursor-pointer outline-none hover:bg-muted/40 focus-visible:bg-muted/40 [&>td]:py-2",
+                    "data-[state=selected]:bg-foreground/10 data-[state=selected]:hover:bg-foreground/10",
                     changed && "shadow-[inset_2px_0_0_var(--contrast)]",
+                    active?.id === claim.id &&
+                      !changed &&
+                      "data-[state=selected]:shadow-[inset_3px_0_0_var(--foreground)]",
                   )}
-                  onClick={() =>
-                    navigate({ to: "/claims/$claimId", params: { claimId: claim.id } })
-                  }
+                  onClick={() => selectClaim(claim.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      selectClaim(claim.id);
+                    }
+                  }}
                 >
                   <TableCell className="font-mono tabular-nums text-sm text-foreground">{claim.id}</TableCell>
                   <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
@@ -229,7 +251,9 @@ function ClaimsQueue() {
       </div>
       </div>
         </div>
-        <div className="min-h-80 self-start rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]" />
+        <div className="min-h-80 self-start overflow-hidden rounded-lg border border-border bg-card lg:sticky lg:top-[84px] lg:h-[calc(100vh-108px)]">
+          {active ? <ClaimDetailPanel claim={active} /> : null}
+        </div>
       </div>
     </div>
   );
