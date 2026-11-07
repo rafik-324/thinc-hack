@@ -141,7 +141,7 @@ function ClaimsQueue() {
         </div>
 
         <div className="rounded-lg border border-border bg-card lg:col-span-3">
-          <div className="flex gap-1 border-b border-border p-3">
+          <div className="flex justify-end gap-1 border-b border-border p-3">
             {(["overview", "update", "history"] as const).map((tab) => (
               <button
                 key={tab}
