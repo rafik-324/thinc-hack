@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardList, Gauge, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { RefreshCw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -13,12 +13,6 @@ import {
 } from "@/components/ui/select";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
-import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { title: "Claims Queue", url: "/queue", icon: ClipboardList },
-  { title: "Policy Impact", url: "/policy-impact", icon: Gauge },
-];
 
 const VERSION_LABELS: Record<VersionMode, string> = {
   v1: "Policy v1",
@@ -79,9 +73,6 @@ function TopBar() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const currentPath = useRouterState({ select: (r) => r.location.pathname });
-
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
