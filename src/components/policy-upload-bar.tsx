@@ -69,42 +69,42 @@ export function PolicyUploadBar() {
             pickFile(e.dataTransfer.files?.[0] ?? null);
           }}
           className={cn(
-            "flex min-h-[150px] flex-col items-center justify-center gap-2.5 p-5 text-center transition-colors lg:border-r lg:border-border",
+            "flex min-h-[112px] flex-col items-center justify-center gap-1.5 p-4 text-center transition-colors lg:border-r lg:border-border",
             dragging ? "bg-muted/60" : "hover:bg-muted/25",
           )}
         >
           <span
             className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background",
+              "flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background",
               dragging && "border-foreground/40",
             )}
           >
-            <Upload aria-hidden="true" className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+            <Upload aria-hidden="true" className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
           </span>
           <span className="space-y-0.5">
-            <span className="block text-sm font-medium tracking-normal text-foreground">
+            <span className="block text-[13px] font-medium tracking-normal text-foreground">
               Policy file here
             </span>
-            <span className="block text-xs text-muted-foreground">
+            <span className="block text-[11px] text-muted-foreground">
               Drop it in this field or click to browse
             </span>
           </span>
           {file ? (
-            <span className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 font-mono text-[11px] tabular-nums text-foreground">
+            <span className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-0.5 font-mono text-[10px] tabular-nums text-foreground">
               <CheckCircle2 aria-hidden="true" className="h-3 w-3 text-decision-fast" />
               {file.name}
               <span className="text-muted-foreground">· {formatSize(file.size)}</span>
             </span>
           ) : (
-            <span className="font-mono text-[10px] tracking-[0.04em] text-muted-foreground uppercase">
+            <span className="font-mono text-[9px] tracking-[0.04em] text-muted-foreground uppercase">
               .txt .md .json .yaml .csv
             </span>
           )}
         </button>
 
         {/* Fields */}
-        <div className="flex flex-col justify-center gap-2.5 p-5">
-          <span className="eyebrow font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
+        <div className="flex flex-col justify-center gap-2 p-4">
+          <span className="eyebrow font-mono text-[9px] uppercase tracking-[0.04em] text-muted-foreground">
             New policy
           </span>
           <div className="grid grid-cols-2 gap-2">
@@ -113,22 +113,22 @@ export function PolicyUploadBar() {
               placeholder="Version, e.g. v3"
               value={version}
               onChange={(e) => setVersion(e.target.value)}
-              className="h-9 font-mono text-xs"
+              className="h-8 font-mono text-xs"
             />
             <Input
               aria-label="Name"
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-9 text-xs"
+              className="h-8 text-xs"
             />
           </div>
           {taken && (
-            <span className="text-xs font-medium text-decision-reject">
+            <span className="text-[11px] font-medium text-decision-reject">
               This version already exists.
             </span>
           )}
-          <Button size="sm" className="h-9 w-full text-sm" disabled={!canSubmit} onClick={submit}>
+          <Button size="sm" className="h-8 w-full text-xs" disabled={!canSubmit} onClick={submit}>
             {upload.isPending ? "Uploading…" : "Upload policy"}
           </Button>
         </div>

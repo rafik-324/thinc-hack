@@ -6,3 +6,4 @@
 - [x] Error rate: alter Wert wird nur beim Hover smooth eingeblendet
 - [x] Policy-Upload-Feld wieder kleiner, etwa die Hälfte
 - [x] Logo unten in der Seitenleiste zentriert
+- [x] Policy-Upload-Feld nochmal etwas kleiner
