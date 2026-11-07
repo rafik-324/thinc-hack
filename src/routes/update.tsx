@@ -32,17 +32,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CLAIMS,
-  DECISION_LABELS,
-  DECISION_ORDER,
-  IMPACT_STATS,
-  RULES,
-  decisionMatrix,
-  isChanged,
-} from "@/lib/policy-data";
+import { DECISION_LABELS, IMPACT_STATS, isChanged } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-store";
 import { useDbImpact } from "@/lib/db-impact";
+import { useClaimSource } from "@/lib/live-claims";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/update")({
@@ -78,12 +71,25 @@ const HEAT_SHADES = [
 function PolicyUpdate() {
   const { overrides } = usePolicy();
   const { data: impact } = useDbImpact();
+  // Same data source as the overview (demo sample or live database), never fixed sample rules.
+  const { claims: CLAIMS, order: DECISION_ORDER } = useClaimSource();
   const changedClaims = CLAIMS.filter(isChanged);
-  const matrix = decisionMatrix();
+  const matrix = DECISION_ORDER.map((v1) =>
+    DECISION_ORDER.map(
+      (v2) => CLAIMS.filter((c) => c.decisionV1 === v1 && c.decisionV2 === v2).length,
+    ),
+  );
 
-  const changedPerRule = RULES.map((rule) => ({
-    rule: rule.id,
-    changed: changedClaims.filter((c) => c.rule === rule.id).length,
+  // A changed claim counts for the rule that decides it under the new version ("v2.1" -> "Rule 1").
+  const ruleKey = (c: (typeof CLAIMS)[number]) => (c.ruleV2 ?? c.rule).replace(/^v\d+\./, "");
+  const ruleLabel = (key: string) =>
+    /^\d+$/.test(key) ? `Rule ${key}` : key === "missing" ? "Missing data" : key;
+  const ruleKeys = [...new Set(CLAIMS.map(ruleKey))]
+    .filter((k) => k !== "—")
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const changedPerRule = ruleKeys.map((key) => ({
+    rule: ruleLabel(key),
+    changed: changedClaims.filter((c) => ruleKey(c) === key).length,
   }));
 
   type Kpi = {
@@ -109,13 +115,18 @@ function PolicyUpdate() {
       value: fmtRate(latest?.errorRate),
       ...(v2 && v1 ? { prevValue: fmtRate(v1.errorRate) } : {}),
       valueClass: "text-decision-fast",
-      hint: latest ? `${latest.wrong} of ${latest.validated} validated decisions (policy ${latest.version}) differ from the expected outcome` : "Loading…",
+      hint: latest
+        ? `${latest.wrong} of ${latest.validated} validated decisions (policy ${latest.version}) differ from the expected outcome`
+        : "Loading…",
     },
     {
       label: "Savings",
       value: savings == null ? "—" : `€${savings.toLocaleString("en-US")}`,
       valueClass: "text-decision-fast",
-      hint: latest && impact ? `${latest.automated} automated decisions × €${impact.perClaim} saved per claim` : "Loading…",
+      hint:
+        latest && impact
+          ? `${latest.automated} automated decisions × €${impact.perClaim} saved per claim`
+          : "Loading…",
     },
   ];
 
@@ -261,8 +272,14 @@ function PolicyUpdate() {
                     {/* Nearly transparent at the base, solid grey at the top of each bar. */}
                     <linearGradient id="changed-bar-gradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 1 }} />
-                      <stop offset="25%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0.45 }} />
-                      <stop offset="100%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0 }} />
+                      <stop
+                        offset="25%"
+                        style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0.45 }}
+                      />
+                      <stop
+                        offset="100%"
+                        style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0 }}
+                      />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -297,9 +314,7 @@ function PolicyUpdate() {
                       <Cell
                         key={entry.rule}
                         fill={
-                          entry.changed > 0
-                            ? "url(#changed-bar-gradient)"
-                            : "var(--color-muted)"
+                          entry.changed > 0 ? "url(#changed-bar-gradient)" : "var(--color-muted)"
                         }
                       />
                     ))}

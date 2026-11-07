@@ -25,6 +25,7 @@ import {
   type Decision,
 } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-store";
+import { cn } from "@/lib/utils";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
@@ -78,7 +79,12 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
             {changed && (
               <Badge
                 variant="outline"
-                className="rounded-sm border-contrast/40 font-mono text-[10px] uppercase text-contrast"
+                className={cn(
+                  "rounded-sm font-mono text-[10px] uppercase",
+                  closed
+                    ? "border-border text-muted-foreground"
+                    : "border-contrast/40 text-contrast",
+                )}
               >
                 Changed
               </Badge>
@@ -174,7 +180,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="eyebrow">Decision under policy {mode}</p>
               <div className="mt-2">
-                <DecisionBadge decision={currentDecision} size="lg" />
+                <DecisionBadge decision={currentDecision} size="lg" muted={closed} />
               </div>
             </div>
 
@@ -192,13 +198,16 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
                         {new Date(o.at).toLocaleString("en-GB")}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <DecisionBadge decision={o.previousDecision} />
+                        <DecisionBadge decision={o.previousDecision} muted={closed} />
                         <ArrowRight
                           aria-hidden="true"
-                          className="h-3 w-3 text-contrast"
+                          className={cn(
+                            "h-3 w-3",
+                            closed ? "text-muted-foreground" : "text-contrast",
+                          )}
                           strokeWidth={1.5}
                         />
-                        <DecisionBadge decision={o.newDecision} />
+                        <DecisionBadge decision={o.newDecision} muted={closed} />
                       </div>
                       <p className="text-sm text-muted-foreground">{o.reason}</p>
                       <p className="text-xs text-muted-foreground">by {o.reviewer}</p>

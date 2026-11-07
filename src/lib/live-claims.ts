@@ -37,6 +37,7 @@ async function fetchLiveClaims(): Promise<Claim[]> {
       id: row.case_id,
       claimant: String(fields["claim_type"] ?? "—").replace(/_/g, " "),
       rule: v1?.matched_rule ?? "—",
+      ruleV2: v2?.matched_rule ?? undefined,
       decisiveFact: factText || row.claim_summary,
       explanation: v1?.explanation ?? row.claim_summary,
       decisionV1: toDecision(v1?.recommendation),

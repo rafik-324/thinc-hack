@@ -19,10 +19,19 @@ export const DECISION_LABELS: Record<Decision, string> = {
   human_review: "Human review",
 };
 
-export const DECISION_ORDER: Decision[] = ["fast_track", "standard_review", "specialist_review", "reject"];
+export const DECISION_ORDER: Decision[] = [
+  "fast_track",
+  "standard_review",
+  "specialist_review",
+  "reject",
+];
 
 /** Decisions used by the live database. */
-export const LIVE_DECISION_ORDER: Decision[] = ["routine_processing", "request_information", "human_review"];
+export const LIVE_DECISION_ORDER: Decision[] = [
+  "routine_processing",
+  "request_information",
+  "human_review",
+];
 
 export type DataSource = "demo" | "live";
 
@@ -38,8 +47,10 @@ export const RULES: Rule[] = [
   {
     id: "R1",
     name: "Fast-track threshold",
-    clauseV1: "Claims with a damage amount of €5,000 or less and no reported injuries are fast-tracked.",
-    clauseV2: "Claims with a damage amount of €2,500 or less and no reported injuries are fast-tracked.",
+    clauseV1:
+      "Claims with a damage amount of €5,000 or less and no reported injuries are fast-tracked.",
+    clauseV2:
+      "Claims with a damage amount of €2,500 or less and no reported injuries are fast-tracked.",
     changed: true,
   },
   {
@@ -83,6 +94,8 @@ export interface Claim {
   id: string;
   claimant: string;
   rule: string;
+  /** Rule that decides the claim under v2, when it differs in the data (live claims). */
+  ruleV2?: string | undefined;
   decisiveFact: string;
   explanation: string;
   decisionV1: Decision;
@@ -208,8 +221,7 @@ export const CLAIMS: Claim[] = [
     claimant: "K. Meyer",
     rule: "R2",
     decisiveFact: "Rear-end collision, passenger with back injury, €12,000.",
-    explanation:
-      "A reported bodily injury triggers specialist review under R2 in both v1 and v2.",
+    explanation: "A reported bodily injury triggers specialist review under R2 in both v1 and v2.",
     decisionV1: "specialist_review",
     decisionV2: "specialist_review",
     status: "open",
@@ -280,8 +292,7 @@ export const CLAIMS: Claim[] = [
     claimant: "G. Fischer",
     rule: "R6",
     decisiveFact: "Hail damage to car roof, €5,600, no injuries.",
-    explanation:
-      "No escalation rule applies; standard review under R6 in both policy versions.",
+    explanation: "No escalation rule applies; standard review under R6 in both policy versions.",
     decisionV1: "standard_review",
     decisionV2: "standard_review",
     status: "open",
@@ -388,8 +399,7 @@ export const CLAIMS: Claim[] = [
     claimant: "X. Wagner",
     rule: "R1",
     decisiveFact: "Coffee machine water leak, €1,700, no injuries.",
-    explanation:
-      "Below the fast-track threshold in both versions; fast-tracked under v1 and v2.",
+    explanation: "Below the fast-track threshold in both versions; fast-tracked under v1 and v2.",
     decisionV1: "fast_track",
     decisionV2: "fast_track",
     status: "open",
