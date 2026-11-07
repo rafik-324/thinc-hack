@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import type { Claim, Decision, VersionMode } from "@/lib/policy-data";
+import type { Claim, DataSource, Decision, VersionMode } from "@/lib/policy-data";
 
 export interface Override {
   id: string;
@@ -12,6 +12,8 @@ export interface Override {
 }
 
 export interface PolicyState {
+  dataSource: DataSource;
+  setDataSource: (source: DataSource) => void;
   mode: VersionMode;
   setMode: (mode: VersionMode) => void;
   selectedClaimId: string | null;
@@ -55,11 +57,17 @@ const SEED_OVERRIDES: Override[] = [
 
 export function PolicyProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<VersionMode>("v2");
+  const [dataSource, setDataSource] = useState<DataSource>("demo");
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Override[]>(SEED_OVERRIDES);
 
   const value = useMemo<PolicyState>(
     () => ({
+      dataSource,
+      setDataSource: (source: DataSource) => {
+        setDataSource(source);
+        setSelectedClaimId(null);
+      },
       mode,
       setMode,
       selectedClaimId,
@@ -77,7 +85,7 @@ export function PolicyProvider({ children }: { children: ReactNode }) {
         return version === "v1" ? claim.decisionV1 : claim.decisionV2;
       },
     }),
-    [mode, selectedClaimId, overrides],
+    [dataSource, mode, selectedClaimId, overrides],
   );
 
   return <PolicyContext.Provider value={value}>{children}</PolicyContext.Provider>;

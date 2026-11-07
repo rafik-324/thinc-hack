@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   DECISION_LABELS,
   DECISION_ORDER,
+  LIVE_DECISION_ORDER,
   getRule,
   isChanged,
   type Claim,
@@ -36,14 +37,15 @@ import { usePolicy } from "@/lib/policy-store";
 
 export function ClaimDetailPanel({ claim }: { claim: Claim }) {
   const { mode, effectiveDecision, overridesFor, addOverride } = usePolicy();
-  const rule = getRule(claim.rule);
+  const rule = claim.ruleInfo ?? getRule(claim.rule);
+  const decisionOptions = claim.live ? LIVE_DECISION_ORDER : DECISION_ORDER;
   const claimOverrides = overridesFor(claim.id);
   const changed = isChanged(claim);
   const closed = claim.status === "closed";
   const currentDecision = effectiveDecision(claim, mode);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newDecision, setNewDecision] = useState<Decision>("standard_review");
+  const [newDecision, setNewDecision] = useState<Decision>(claim.live ? "human_review" : "standard_review");
   const [reason, setReason] = useState("");
   const [reviewer, setReviewer] = useState("");
 
@@ -212,7 +214,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {DECISION_ORDER.map((d) => (
+                      {decisionOptions.map((d) => (
                         <SelectItem key={d} value={d}>
                           {DECISION_LABELS[d]}
                         </SelectItem>

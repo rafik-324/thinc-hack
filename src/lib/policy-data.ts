@@ -1,4 +1,11 @@
-export type Decision = "fast_track" | "standard_review" | "specialist_review" | "reject";
+export type Decision =
+  | "fast_track"
+  | "standard_review"
+  | "specialist_review"
+  | "reject"
+  | "routine_processing"
+  | "request_information"
+  | "human_review";
 export type ClaimStatus = "open" | "closed";
 export type VersionMode = "v1" | "v2";
 
@@ -7,9 +14,17 @@ export const DECISION_LABELS: Record<Decision, string> = {
   standard_review: "Standard review",
   specialist_review: "Specialist review",
   reject: "Reject",
+  routine_processing: "Routine processing",
+  request_information: "Request information",
+  human_review: "Human review",
 };
 
 export const DECISION_ORDER: Decision[] = ["fast_track", "standard_review", "specialist_review", "reject"];
+
+/** Decisions used by the live database. */
+export const LIVE_DECISION_ORDER: Decision[] = ["routine_processing", "request_information", "human_review"];
+
+export type DataSource = "demo" | "live";
 
 export interface Rule {
   id: string;
@@ -74,6 +89,9 @@ export interface Claim {
   decisionV2: Decision;
   status: ClaimStatus;
   amountEur: number;
+  /** Set for claims loaded from the database. */
+  live?: boolean;
+  ruleInfo?: Rule;
 }
 
 export const CLAIMS: Claim[] = [
