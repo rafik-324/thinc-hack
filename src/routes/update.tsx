@@ -19,6 +19,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { PolicyUploadBar } from "@/components/policy-upload-bar";
 import { DecisionBadge } from "@/components/decision-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -135,6 +136,7 @@ function PolicyUpdate() {
 
   return (
     <div className="space-y-6">
+      <PolicyUploadBar />
       <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
