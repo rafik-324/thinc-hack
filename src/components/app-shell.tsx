@@ -24,7 +24,13 @@ import {
 } from "@/components/ui/select";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
-import { describeApply, describeApplyError, useApplyPolicy, usePolicies } from "@/lib/policies";
+import {
+  describeApply,
+  describeApplyError,
+  useApplyPolicy,
+  useDecidedVersions,
+  usePolicies,
+} from "@/lib/policies";
 import { cn } from "@/lib/utils";
 import { TaktileLogo } from "@/components/taktile-logo";
 
@@ -60,6 +66,14 @@ function TopBar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean })
   }, [versionKey, setMode]);
 
   const applyPolicy = useApplyPolicy();
+  const { data: decided } = useDecidedVersions();
+
+  // Picking a version that already has decisions in the DB (v1, an applied version, or test data) loads it
+  // right away. A version without decisions stays pending until "Change policy" runs the engine.
+  const choose = (value: VersionMode) => {
+    setPending(value);
+    if (value === "v1" || dataSource === "demo" || decided?.has(value)) setMode(value);
+  };
 
   const apply = () => {
     // v1 is the baseline every claim was decided with; test data has no backend.
@@ -100,7 +114,7 @@ function TopBar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean })
 
       <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         <span className="eyebrow hidden sm:block">Policy Version</span>
-        <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
+        <Select value={pending} onValueChange={(value) => choose(value as VersionMode)}>
           <SelectTrigger
             aria-label="Policy version"
             className="h-8 w-[4.5rem] rounded-sm font-mono tabular-nums text-xs sm:w-32"

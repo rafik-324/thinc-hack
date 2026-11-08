@@ -124,11 +124,26 @@ export function useApplyPolicy() {
       qc.invalidateQueries({ queryKey: ["policies"] });
       qc.invalidateQueries({ queryKey: ["policy-run"] });
       qc.invalidateQueries({ queryKey: ["policy-config"] });
+      qc.invalidateQueries({ queryKey: DECIDED_KEY });
     },
   });
 }
 
 const APPLY_KEY = ["apply-policy"];
+const DECIDED_KEY = ["decided-versions"];
+
+/** Policy versions that already have engine decisions in the database (can be shown without a new run). */
+export function useDecidedVersions() {
+  return useQuery({
+    queryKey: DECIDED_KEY,
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await supabase.from("decisions").select("policy_version");
+      if (error) throw error;
+      return new Set((data ?? []).map((row) => row.policy_version));
+    },
+    staleTime: 30_000,
+  });
+}
 
 /** True while any engine run started from anywhere in the app is still in progress. */
 export function useApplyRunning() {

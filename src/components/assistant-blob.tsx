@@ -3,7 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Blobatar } from "@blobatar/react";
 import { happy, idle, surprised, thinking } from "blobatar/expression";
 import "blobatar/motion.css";
-import { Send, X } from "lucide-react";
+import { Send, Volume2, VolumeX, X } from "lucide-react";
 
 import { askAssistant, speakAssistant, type AssistantTurn } from "@/lib/assistant.functions";
 import { RICO_LANG, TourOverlay, ricoSpot, useRicoTour } from "@/components/rico-tour-layer";
@@ -14,6 +14,7 @@ const AVATAR_SEED = "alain00";
 const AVATAR_PALETTE = { head: "#86f09f", eye: "#121212" };
 const AVATAR_SIZE = 80;
 const LONG_PRESS_MS = 500;
+const READ_ALOUD_KEY = "rico-read-aloud";
 const GREETING =
   "Hi, I'm Rico. Ask me anything about Retakt — pages, buttons, policy rules or how a policy update works.";
 const STARTERS = [
@@ -49,8 +50,8 @@ function createRecognition(): Recognition | null {
 
 /**
  * Floating blob avatar, fixed bottom-right on every page.
- * Short click: Rico moves to the middle of the screen and you talk to him (microphone + spoken answers).
- * Long press: opens the text chat window.
+ * Long press opens the text chat window (keyboard: Enter or Space). A short click does nothing.
+ * The spoken talk mode is switched off for now; its code stays here so it can come back.
  */
 export function AssistantBlob() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
@@ -67,6 +68,8 @@ export function AssistantBlob() {
   const [caption, setCaption] = useState("");
   const [voiceSupported, setVoiceSupported] = useState(true);
   const [pressing, setPressing] = useState(false);
+  // Read Rico's chat answers aloud next to the text (speaker button in the chat header).
+  const [readAloud, setReadAloud] = useState(true);
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -229,16 +232,6 @@ export function AssistantBlob() {
     }
   }, [ask, speak]);
 
-  const enterTalk = useCallback(() => {
-    setOpen(false);
-    setMode("talk");
-    modeRef.current = "talk";
-    setCaption("");
-    setHeard("");
-    setError(null);
-    listen();
-  }, [listen]);
-
   const leaveTalk = useCallback(() => {
     setMode("dock");
     modeRef.current = "dock";
@@ -267,7 +260,32 @@ export function AssistantBlob() {
 
   useEffect(() => stopVoice, [stopVoice]);
 
-  // ---- Press handling: long press opens the text chat, a short click toggles talk mode.
+  // Remember the speaker setting on this device (best effort; storage may be blocked).
+  useEffect(() => {
+    try {
+      // On by default; only an explicit "off" on this device turns it off.
+      setReadAloud(window.localStorage.getItem(READ_ALOUD_KEY) !== "off");
+    } catch {
+      // storage unavailable: stays on
+    }
+  }, []);
+  function toggleReadAloud() {
+    const next = !readAloud;
+    setReadAloud(next);
+    if (!next) stopVoice();
+    try {
+      window.localStorage.setItem(READ_ALOUD_KEY, next ? "on" : "off");
+    } catch {
+      // storage unavailable
+    }
+  }
+
+  // Closing the chat stops any answer that is still being read aloud.
+  useEffect(() => {
+    if (!open && modeRef.current !== "talk") stopVoice();
+  }, [open, stopVoice]);
+
+  // ---- Press handling: long press opens the text chat. Talk mode is off for now.
   function onPointerDown(e: React.PointerEvent) {
     if (e.button !== 0) return;
     longPressed.current = false;
@@ -287,24 +305,26 @@ export function AssistantBlob() {
     pressTimer.current = null;
     setPressing(false);
   }
-  function onClick() {
+  function onClick(e: React.MouseEvent) {
     if (longPressed.current) {
       longPressed.current = false;
       return;
     }
     cancelPress();
     if (tour.active) return tour.repeat();
-    if (open) setOpen(false);
     if (mode === "talk") leaveTalk();
-    else enterTalk();
+    // Keyboard activation (Enter/Space) has no long press, so it toggles the chat directly.
+    if (e.detail === 0) setOpen((v) => !v);
   }
 
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy) return;
     setDraft("");
+    if (mode !== "talk") stopVoice(); // a new question cuts off the answer still being read
     const answer = await ask(content, mode === "talk");
     if (answer && mode === "talk") setCaption(answer);
+    else if (answer && readAloud) speak(answer, () => setVoice("idle"));
   }
 
   function onSubmit(e: FormEvent) {
@@ -435,6 +455,19 @@ export function AssistantBlob() {
               </div>
               <button
                 type="button"
+                onClick={toggleReadAloud}
+                className={
+                  "rounded-md p-1 hover:bg-accent hover:text-foreground " +
+                  (readAloud ? "text-foreground" : "text-muted-foreground")
+                }
+                aria-pressed={readAloud}
+                aria-label={readAloud ? "Stop reading answers aloud" : "Read answers aloud"}
+                title={readAloud ? "Reading answers aloud" : "Read answers aloud"}
+              >
+                {readAloud ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+              </button>
+              <button
+                type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
                 aria-label="Close assistant"
@@ -507,20 +540,16 @@ export function AssistantBlob() {
           onContextMenu={(e) => e.preventDefault()}
           onClick={onClick}
           onKeyDown={(e) => {
-            // Keyboard: Enter/Space = click (talk), Shift+Enter = text chat.
+            // Keyboard: Enter/Space = click (opens the chat), Shift+Enter = text chat.
             if (e.key === "Enter" && e.shiftKey) {
               e.preventDefault();
               leaveTalk();
               setOpen((v) => !v);
             }
           }}
-          aria-label={
-            talking
-              ? "Stop talking to Rico (beta)"
-              : "Talk to Rico, beta (long press for text chat)"
-          }
+          aria-label="Chat with Rico, beta (long press)"
           aria-expanded={open || talking}
-          title="Click to talk · hold to chat"
+          title="Hold to chat with Rico"
           style={{
             transform: blobTransform,
             transition: "transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
