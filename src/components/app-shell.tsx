@@ -41,16 +41,16 @@ function TopBar() {
   // Never point at a version that does not exist: fall back to the newest uploaded one.
   const versions = policies.map((p) => p.version);
   const versionKey = versions.join("|");
-  // On first load pick the newest uploaded version (just v1 while it is the only policy);
-  // afterwards only correct a selection that no longer exists.
+  // On first load pick the newest uploaded version (just v1 while it is the only policy). Never
+  // correct the selection later: right after an upload the list is still reloading and would
+  // otherwise throw the user back to the old version.
   const initialised = useRef(false);
   useEffect(() => {
-    const list = versionKey ? versionKey.split("|") : [];
-    const newest = list[list.length - 1];
-    if (!newest) return;
-    if (!initialised.current || !list.includes(mode)) setMode(newest);
+    if (initialised.current || !versionKey) return;
+    const list = versionKey.split("|");
+    setMode(list[list.length - 1] ?? "v1");
     initialised.current = true;
-  }, [versionKey, mode, setMode]);
+  }, [versionKey, setMode]);
 
   const applyPolicy = useApplyPolicy();
 
