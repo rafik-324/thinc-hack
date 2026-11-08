@@ -376,7 +376,7 @@ function ReplayStage({
   threshold: number;
   onPreview: (t: number) => void;
   engineRef: React.MutableRefObject<ReplayEngine | null>;
-  onMode: (m: StageMode) => void;
+  onMode?: (m: StageMode) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -395,7 +395,7 @@ function ReplayStage({
     const engine = new ReplayEngine(canvasRef.current!, wrapRef.current!, CLAIMS, {
       onMode: (m) => {
         setMode(m);
-        onMode(m);
+        onMode?.(m);
       },
       onCounts: setCounts,
       onHover: setHover,
@@ -740,7 +740,6 @@ function Card({ c, t, delay }: { c: LandingClaim; t: number; delay: number }) {
 export function LandingReplay() {
   const [threshold, setThreshold] = useState(V1_THRESHOLD);
   const [introDone, setIntroDone] = useState(false);
-  const [mode, setMode] = useState<StageMode>("idle");
   const engineRef = useRef<ReplayEngine | null>(null);
   const heroRef = useRef<HTMLElement>(null);
   const replayRef = useReveal<HTMLElement>();
@@ -748,7 +747,6 @@ export function LandingReplay() {
   const finalRef = useReveal<HTMLElement>();
 
   const onOpen = useCallback(() => setIntroDone(true), []);
-  const onMode = useCallback((m: StageMode) => setMode(m), []);
   const ticker = useMemo(
     () =>
       CLAIMS.map((c) => (
@@ -778,11 +776,6 @@ export function LandingReplay() {
           <a href="#second-look">Second look</a>
         </nav>
         <div className="pr-nav__hud pr-eyebrow">
-          <span className="pr-rec" title="Replay timecode: runs faster while the claims replay">
-            <i />
-            Replay
-          </span>
-          <Timecode speed={mode === "rewind" ? -6 : mode === "play" ? 2 : 1} className="pr-tc" />
           <Link to="/queue" className="pr-nav__cta">
             Open queue →
           </Link>
@@ -853,12 +846,7 @@ export function LandingReplay() {
               </div>
             </div>
             <div className="pr-fade">
-              <ReplayStage
-                threshold={threshold}
-                onPreview={setThreshold}
-                engineRef={engineRef}
-                onMode={onMode}
-              />
+              <ReplayStage threshold={threshold} onPreview={setThreshold} engineRef={engineRef} />
             </div>
           </div>
         </section>
