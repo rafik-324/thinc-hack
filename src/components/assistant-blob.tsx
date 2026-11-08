@@ -423,7 +423,12 @@ export function AssistantBlob() {
                 expression={expression}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-tight">Rico</p>
+                <p className="flex items-center gap-1.5 text-sm font-medium leading-tight">
+                  Rico
+                  <span className="rounded-full border border-border px-1.5 py-px text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Beta
+                  </span>
+                </p>
                 <p className="text-xs text-muted-foreground leading-tight">
                   {busy ? "Thinking…" : "Retakt assistant"}
                 </p>
@@ -509,7 +514,11 @@ export function AssistantBlob() {
               setOpen((v) => !v);
             }
           }}
-          aria-label={talking ? "Stop talking to Rico" : "Talk to Rico (long press for text chat)"}
+          aria-label={
+            talking
+              ? "Stop talking to Rico (beta)"
+              : "Talk to Rico, beta (long press for text chat)"
+          }
           aria-expanded={open || talking}
           title="Click to talk · hold to chat"
           style={{
@@ -536,6 +545,13 @@ export function AssistantBlob() {
           {talking && voice === "listening" && (
             <span className="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-full bg-[#86f09f]/25" />
           )}
+          {/* Rico is still in development. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full border border-border bg-background/90 px-1.5 py-px text-[10px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur"
+          >
+            Beta
+          </span>
         </button>
       </div>
     </>

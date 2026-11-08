@@ -119,14 +119,15 @@ async function aiEnv(): Promise<Record<string, string | undefined>> {
   return env;
 }
 
-type Provider = "gemini" | "openai_compatible";
+type Provider = "gemini" | "openai_compatible" | "anthropic";
 
 const DEFAULTS: Record<Provider, { base: string; model: string }> = {
   gemini: { base: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-3.5-flash" },
   openai_compatible: { base: "https://api.openai.com/v1", model: "gpt-4.1-mini" },
+  anthropic: { base: "https://api.anthropic.com/v1", model: "claude-opus-5-5" },
 };
 
-/** Builds the provider request. Gemini: generateContent; OpenAI-compatible: chat/completions. */
+/** Builds the provider request. Gemini: generateContent; OpenAI-compatible: chat/completions; Anthropic: messages. */
 function providerRequest(
   provider: Provider,
   base: string,
@@ -135,6 +136,26 @@ function providerRequest(
   system: string,
   messages: AssistantTurn[],
 ) {
+  if (provider === "anthropic") {
+    return {
+      url: `${base}/messages`,
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2026-10-21",
+        "anthropic-beta": "server-side-fallback-2026-07-01",
+      },
+      body: {
+        model,
+        system,
+        // The Messages API needs the conversation to start with a user turn.
+        messages: messages.slice(messages.findIndex((turn) => turn.role === "user")),
+        max_tokens: 4096,
+        // Rico is a conversational helper: low effort keeps spoken answers fast.
+        output_config: { effort: "low" },
+        fallbacks: "default",
+      },
+    };
+  }
   if (provider === "openai_compatible") {
     return {
       url: `${base}/chat/completions`,
@@ -166,6 +187,15 @@ function providerRequest(
 }
 
 function providerAnswer(provider: Provider, value: unknown): string {
+  if (provider === "anthropic") {
+    const v = value as { stop_reason?: string; content?: { type?: string; text?: string }[] };
+    if (v.stop_reason === "refusal") return "";
+    return (v.content ?? [])
+      .filter((block) => block.type === "text" && typeof block.text === "string")
+      .map((block) => block.text)
+      .join("")
+      .trim();
+  }
   if (provider === "openai_compatible") {
     const v = value as { choices?: { message?: { content?: string | null } }[] };
     return (v.choices?.[0]?.message?.content ?? "").trim();
@@ -184,9 +214,11 @@ export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator(readInput)
   .handler(async ({ data }): Promise<{ answer: string }> => {
     const env = await aiEnv();
-    // Same switch as the backend (AI_PROVIDER in .env): gemini or openai_compatible.
+    // Same switch as the backend (AI_PROVIDER in .env): gemini, openai_compatible or anthropic.
     const provider: Provider =
-      env["AI_PROVIDER"] === "openai_compatible" ? "openai_compatible" : "gemini";
+      env["AI_PROVIDER"] === "openai_compatible" || env["AI_PROVIDER"] === "anthropic"
+        ? env["AI_PROVIDER"]
+        : "gemini";
     const key = env["AI_API_KEY"];
     const base = (env["AI_BASE_URL"] || DEFAULTS[provider].base).replace(/\/+$/, "");
     const model = env["AI_MODEL"] || DEFAULTS[provider].model;
