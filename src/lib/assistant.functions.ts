@@ -1,14 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 
 /**
- * Platform assistant behind the floating blob avatar.
+ * Rico, the platform assistant behind the floating blob avatar.
  * Runs on the server only: the Gemini key (AI_API_KEY) never reaches the browser.
- * Configure AI_API_KEY, AI_BASE_URL (https://generativelanguage.googleapis.com/v1beta) and AI_MODEL,
- * locally in app/.env.local (git-ignored).
+ * Locally the key is the one from the Settings page: the backend writes it to the repo-root .env,
+ * which aiEnv() re-reads on every request. In production set AI_API_KEY as a server secret.
  */
 
 export type AssistantTurn = { role: "user" | "assistant"; content: string };
-export type AssistantInput = { messages: AssistantTurn[]; page: string };
+export type AssistantInput = { messages: AssistantTurn[]; page: string; voice?: boolean };
 
 const MAX_TURNS = 16;
 const MAX_CHARS = 2000;
@@ -59,7 +59,7 @@ changed or need a second look → inspect heatmap and changed claims → on Over
 claims one by one → correct with "Edit claim" if needed → finished cases appear under History.
 `.trim();
 
-const SYSTEM = `You are Blobby, the friendly built-in assistant of the Retakt platform.
+const SYSTEM = `You are Rico, the friendly built-in assistant of the Retakt platform.
 Answer questions about the platform: what it does, where things are, which buttons exist, how workflows go,
 and how the policy rules work. Use only the platform guide below; if something is not covered, say you don't know yet
 instead of guessing. You cannot see live claim data and cannot perform actions yet — point the user to the right
@@ -89,17 +89,46 @@ function readInput(raw: unknown): AssistantInput {
   if (messages[messages.length - 1]!.role !== "user")
     throw new Error("The last message must be yours.");
   const page = typeof body.page === "string" ? body.page.slice(0, 200) : "/";
-  return { messages, page };
+  return { messages, page, voice: body.voice === true };
+}
+
+const VOICE_STYLE = `This is a spoken conversation: your answer is read aloud.
+Answer in one to three short, natural sentences. No lists, no quotes around labels, no symbols or abbreviations
+that sound odd when spoken.`;
+
+/**
+ * AI settings for this request. In local dev the repo-root .env is re-read on every call, so a key changed
+ * there (e.g. via the Settings page) works immediately without restarting Vite; its values win over
+ * process.env. In production only process.env (server secrets) is used.
+ */
+async function aiEnv(): Promise<Record<string, string | undefined>> {
+  const env: Record<string, string | undefined> = { ...process.env };
+  if (import.meta.env.DEV) {
+    try {
+      const { readFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      const text = await readFile(join(process.cwd(), "..", ".env"), "utf8");
+      for (const line of text.split(/\r?\n/)) {
+        const m = /^\s*(AI_API_KEY|AI_BASE_URL|AI_MODEL)\s*=\s*(.*?)\s*$/.exec(line);
+        if (m && m[2]) env[m[1]!] = m[2].replace(/^(['"])(.*)\1$/, "$2");
+      }
+    } catch {
+      // No root .env: fall back to process.env.
+    }
+  }
+  return env;
 }
 
 export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator(readInput)
   .handler(async ({ data }): Promise<{ answer: string }> => {
-    const key = process.env["AI_API_KEY"];
-    const base = (
-      process.env["AI_BASE_URL"] || "https://generativelanguage.googleapis.com/v1beta"
-    ).replace(/\/+$/, "");
-    const model = process.env["AI_MODEL"] || "gemini-3.5-flash";
+    const env = await aiEnv();
+    const key = env["AI_API_KEY"];
+    const base = (env["AI_BASE_URL"] || "https://generativelanguage.googleapis.com/v1beta").replace(
+      /\/+$/,
+      "",
+    );
+    const model = env["AI_MODEL"] || "gemini-3.5-flash";
     if (!key) throw new Error("CONFIG: the assistant has no AI key on the server (AI_API_KEY).");
     if (!/^https:\/\/[^/?#@]+(\/[^?#]*)?$/.test(base) || !/^[A-Za-z0-9._-]+$/.test(model)) {
       throw new Error("CONFIG: AI_BASE_URL or AI_MODEL is invalid.");
@@ -112,7 +141,11 @@ export const askAssistant = createServerFn({ method: "POST" })
       signal: AbortSignal.timeout(25_000),
       body: JSON.stringify({
         systemInstruction: {
-          parts: [{ text: `${SYSTEM}\n\nThe user is currently on page: ${data.page}` }],
+          parts: [
+            {
+              text: `${SYSTEM}\n\nThe user is currently on page: ${data.page}${data.voice ? `\n\n${VOICE_STYLE}` : ""}`,
+            },
+          ],
         },
         contents: data.messages.map((turn) => ({
           role: turn.role === "assistant" ? "model" : "user",
