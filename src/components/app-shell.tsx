@@ -19,7 +19,7 @@ import { TaktileLogo } from "@/components/taktile-logo";
 
 const NAV_ITEMS = [
   { title: "Overview", to: "/queue", icon: LayoutGrid },
-  { title: "Update", to: "/update", icon: RefreshCw },
+  { title: "Policy Update", to: "/update", icon: RefreshCw },
   { title: "History", to: "/history", icon: History },
 ] as const;
 
