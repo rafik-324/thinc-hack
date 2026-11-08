@@ -209,7 +209,6 @@ function ClaimsQueue() {
                     <TableHead className="eyebrow h-10 whitespace-nowrap">Claim ID</TableHead>
                     <TableHead className="eyebrow hidden h-10 sm:table-cell">Claim type</TableHead>
                     <TableHead className="eyebrow h-10">Decision</TableHead>
-                    <TableHead className="eyebrow h-10">Rule</TableHead>
                     <TableHead className="eyebrow h-10 w-1/3">Decisive fact</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -258,11 +257,6 @@ function ClaimsQueue() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="rounded-sm font-mono tabular-nums">
-                            {claim.ruleV2 ?? claim.rule}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="max-w-md">
                           <span className="line-clamp-2 text-sm text-muted-foreground">
                             {claim.decisiveFact}
@@ -273,7 +267,7 @@ function ClaimsQueue() {
                   })}
                   {rows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                         No claims match the current filters.
                       </TableCell>
                     </TableRow>
