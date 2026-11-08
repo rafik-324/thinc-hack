@@ -45,7 +45,7 @@ function SubmittedPage() {
 
   const loadPage = useCallback(
     async (cursor?: string) => {
-      const page = await fetchInbox({ data: { cursor } });
+      const page = await fetchInbox({ data: cursor ? { cursor } : {} });
       return page;
     },
     [fetchInbox],
