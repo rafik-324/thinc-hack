@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, CircleAlert, Eye, EyeOff, KeyRound } from "lucide-react";
+import { CheckCircle2, CircleAlert, Eye, EyeOff, GraduationCap, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isTourDone, resetTour } from "@/lib/rico-tour";
 import { useAiSettings, useSaveAiKey } from "@/lib/settings";
 
 export const Route = createFileRoute("/settings")({
@@ -36,12 +37,65 @@ function SettingsPage() {
             <KeyRound aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
             API key
           </TabsTrigger>
+          <TabsTrigger value="rico" className="gap-1.5">
+            <GraduationCap aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+            Rico
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="api-key" className="mt-4">
           <ApiKeyTab />
         </TabsContent>
+        <TabsContent value="rico" className="mt-4">
+          <RicoTab />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/** Rico's first-run tour is remembered per device; resetting makes it start again on the next reload. */
+function RicoTab() {
+  const [done, setDone] = useState(() => isTourDone());
+  return (
+    <Card className="max-w-xl">
+      <CardHeader>
+        <CardTitle className="text-base">Tutorial</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          On the first visit Rico walks you through the whole workflow. This is remembered on this
+          device only.
+        </p>
+        <Row label="Status on this device" value={done ? "completed" : "starts on next reload"} />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            className="rounded-sm text-xs"
+            onClick={() => {
+              // "?tour" makes Rico start the tour right away (always on the Overview).
+              resetTour();
+              window.location.assign("/queue?tour");
+            }}
+          >
+            Start tutorial now
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-sm text-xs"
+            onClick={() => {
+              resetTour();
+              setDone(false);
+              toast.success("Tutorial reset", {
+                description: "Rico starts the tour again when you reload the page.",
+              });
+            }}
+          >
+            Reset tutorial
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

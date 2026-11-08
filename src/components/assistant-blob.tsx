@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Blobatar } from "@blobatar/react";
 import { happy, idle, surprised, thinking } from "blobatar/expression";
 import "blobatar/motion.css";
 import { Send, X } from "lucide-react";
 
-import { askAssistant, type AssistantTurn } from "@/lib/assistant.functions";
+import { askAssistant, speakAssistant, type AssistantTurn } from "@/lib/assistant.functions";
+import { RICO_LANG, TourOverlay, ricoSpot, useRicoTour } from "@/components/rico-tour-layer";
+import { TOUR_START_ROUTE } from "@/lib/rico-tour";
 
 const AVATAR_SEED = "alain00";
 // Green of the design deck / "Routine processing" badge: --decision-fast oklch(0.87 0.15 150).
@@ -52,6 +54,7 @@ function createRecognition(): Recognition | null {
  */
 export function AssistantBlob() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("dock");
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
@@ -72,6 +75,8 @@ export function AssistantBlob() {
   const recognition = useRef<Recognition | null>(null);
   const liveRecognitions = useRef(new Set<Recognition>());
   const modeRef = useRef<Mode>("dock");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechRun = useRef(0);
   const messagesRef = useRef<AssistantTurn[]>([]);
   modeRef.current = mode;
   messagesRef.current = messages;
@@ -123,20 +128,44 @@ export function AssistantBlob() {
       }
     }
     liveRecognitions.current.clear();
+    speechRun.current++;
+    if (audioRef.current) {
+      audioRef.current.onended = audioRef.current.onerror = null;
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     setVoice("idle");
   }, []);
 
+  // Rico's voice: ElevenLabs (server function). Falls back to the browser voice if that fails.
   const speak = useCallback((text: string, then: () => void) => {
-    const synth = typeof window !== "undefined" ? window.speechSynthesis : undefined;
-    if (!synth) return then();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = navigator.language || "en-US";
-    utterance.onend = then;
-    utterance.onerror = then;
+    const run = ++speechRun.current;
+    const fallback = () => {
+      if (run !== speechRun.current) return;
+      const synth = typeof window !== "undefined" ? window.speechSynthesis : undefined;
+      if (!synth) return then();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = RICO_LANG;
+      utterance.onend = then;
+      utterance.onerror = then;
+      synth.cancel();
+      synth.speak(utterance);
+    };
     setVoice("speaking");
-    synth.cancel();
-    synth.speak(utterance);
+    speakAssistant({ data: { text } })
+      .then(({ audio, mime }) => {
+        if (run !== speechRun.current) return;
+        const el = new Audio(`data:${mime};base64,${audio}`);
+        audioRef.current = el;
+        el.onended = () => {
+          if (audioRef.current === el) audioRef.current = null;
+          if (run === speechRun.current) then();
+        };
+        el.onerror = fallback;
+        el.play().catch(fallback);
+      })
+      .catch(fallback);
   }, []);
 
   const listen = useCallback(() => {
@@ -152,7 +181,7 @@ export function AssistantBlob() {
     liveRecognitions.current.clear();
     liveRecognitions.current.add(rec);
     recognition.current = rec;
-    rec.lang = navigator.language || "en-US";
+    rec.lang = RICO_LANG;
     rec.interimResults = true;
     rec.continuous = false;
     let finalText = "";
@@ -216,6 +245,15 @@ export function AssistantBlob() {
     stopVoice();
   }, [stopVoice]);
 
+  // First-run tour on this device (see rico-tour-layer.tsx). Closes chat / talk mode when it starts.
+  // The tour always begins on the Overview page.
+  const onTourStart = useCallback(() => {
+    setOpen(false);
+    leaveTalk();
+    void navigate({ to: TOUR_START_ROUTE });
+  }, [leaveTalk, navigate]);
+  const tour = useRicoTour(pathname, onTourStart);
+
   useEffect(() => {
     if (!open && mode === "dock") return;
     const onKey = (e: KeyboardEvent) => {
@@ -238,6 +276,8 @@ export function AssistantBlob() {
       longPressed.current = true;
       pressTimer.current = null;
       setPressing(false);
+      // During the tour a long press switches between spoken explanations and speech bubbles.
+      if (tour.active) return tour.toggleMode();
       leaveTalk();
       setOpen(true);
     }, LONG_PRESS_MS);
@@ -253,6 +293,7 @@ export function AssistantBlob() {
       return;
     }
     cancelPress();
+    if (tour.active) return tour.repeat();
     if (open) setOpen(false);
     if (mode === "talk") leaveTalk();
     else enterTalk();
@@ -272,8 +313,11 @@ export function AssistantBlob() {
   }
 
   const talking = mode === "talk";
-  const expression =
-    busy || voice === "thinking"
+  const expression = tour.active
+    ? tour.speaking
+      ? happy
+      : idle
+    : busy || voice === "thinking"
       ? thinking
       : voice === "listening"
         ? surprised
@@ -282,9 +326,15 @@ export function AssistantBlob() {
           : idle;
   // Docked: bottom-right (16px inset). Talk: centre of the viewport, twice the size.
   const half = AVATAR_SIZE / 2 + 16;
-  const blobTransform = talking
-    ? `translate(calc(${half}px - 50vw), calc(${half}px - 50dvh)) scale(2)`
-    : "none";
+  // Tour: Rico flies next to the highlighted element (1.25× size), or to the middle when there is none.
+  const tourScale = tour.rect ? 1.25 : 2;
+  const tourHalf = (AVATAR_SIZE * tourScale) / 2;
+  const spot = tour.active ? ricoSpot(tour, tourHalf) : null;
+  const blobTransform = spot
+    ? `translate(${spot.x - (tour.viewport.w - half)}px, ${spot.y - (tour.viewport.h - half)}px) scale(${tourScale})`
+    : talking
+      ? `translate(calc(${half}px - 50vw), calc(${half}px - 50dvh)) scale(2)`
+      : "none";
   const status =
     voice === "listening"
       ? heard || "I'm listening…"
@@ -296,6 +346,7 @@ export function AssistantBlob() {
 
   return (
     <>
+      {tour.active && spot && <TourOverlay tour={tour} rico={{ ...spot, half: tourHalf }} />}
       {talking && (
         <div
           className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm animate-in fade-in duration-300"
