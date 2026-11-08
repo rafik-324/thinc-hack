@@ -7,7 +7,9 @@ import { Send, X } from "lucide-react";
 
 import { askAssistant, type AssistantTurn } from "@/lib/assistant.functions";
 
-const AVATAR_SEED = "retakt-assistant";
+const AVATAR_SEED = "alain00";
+// Green of the design deck / "Routine processing" badge: --decision-fast oklch(0.87 0.15 150).
+const AVATAR_PALETTE = { head: "#86f09f", eye: "#121212" };
 const GREETING =
   "Hi, I'm Blobby. Ask me anything about Retakt — pages, buttons, policy rules or how a policy update works.";
 const STARTERS = [
@@ -80,7 +82,14 @@ export function AssistantBlob() {
           className="flex h-[min(32rem,calc(100dvh-7rem))] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-2xl"
         >
           <header className="flex items-center gap-2 border-b border-border px-3 py-2">
-            <Blobatar name={AVATAR_SEED} size={28} animate="always" expression={expression} />
+            <Blobatar
+              name={AVATAR_SEED}
+              size={28}
+              background={false}
+              palette={AVATAR_PALETTE}
+              animate="always"
+              expression={expression}
+            />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium leading-tight">Blobby</p>
               <p className="text-xs text-muted-foreground leading-tight">
@@ -157,12 +166,13 @@ export function AssistantBlob() {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close assistant" : "Ask the Retakt assistant"}
         aria-expanded={open}
-        className="rounded-full shadow-lg ring-1 ring-border transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="rounded-full bg-transparent transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Blobatar
           name={AVATAR_SEED}
-          size={56}
-          background="circle"
+          size={80}
+          background={false}
+          palette={AVATAR_PALETTE}
           animate="always"
           expression={expression}
         />
