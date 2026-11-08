@@ -73,31 +73,6 @@ function Odometer({ value }: { value: number }) {
 }
 
 /** Eases a number toward its target; returns the current animated value. */
-function useTween(target: number, duration = 900) {
-  const [v, setV] = useState(target);
-  const from = useRef(target);
-  useEffect(() => {
-    if (prefersReduced()) {
-      setV(target);
-      from.current = target;
-      return;
-    }
-    const start = performance.now(),
-      a = from.current;
-    let raf = 0;
-    const step = (now: number) => {
-      const p = clamp((now - start) / duration, 0, 1);
-      const cur = a + (target - a) * easeOut(p);
-      from.current = cur;
-      setV(cur);
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return v;
-}
-
 /** Adds `is-in` once the element scrolls into view. */
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -762,129 +737,6 @@ function Card({ c, t, delay }: { c: LandingClaim; t: number; delay: number }) {
   );
 }
 
-function Impact({ threshold }: { threshold: number }) {
-  const ref = useReveal<HTMLElement>();
-  const [volume, setVolume] = useState("12,000");
-  const [minutes, setMinutes] = useState("25");
-  const [rate, setRate] = useState("55");
-  const num = (s: string) => Number(s.replace(/[^\d.]/g, "")) || 0;
-
-  const flipped = OPEN.filter((c) => flips(c, threshold)).length;
-  const reviewNow = OPEN.filter((c) => routeOpen(c, threshold) === "human_review").length;
-  const reviewV1 = OPEN.filter((c) => c.v1 === "human_review").length;
-  const delta = Math.round(num(volume) * ((reviewNow - reviewV1) / OPEN.length));
-  const cost = ((delta * num(minutes)) / 60) * num(rate);
-  const tDelta = useTween(delta),
-    tCost = useTween(cost);
-  const cls = delta > 0 ? "is-up" : delta < 0 ? "is-down" : "";
-  const n = Math.round(tDelta);
-
-  return (
-    <section className="pr-section pr-dark is-reveal" id="impact" ref={ref}>
-      <div className="pr-wrap">
-        <div className="pr-section__head">
-          <div className="pr-eyebrow">03 · Impact</div>
-          <div>
-            <h2 className="pr-section__title">
-              <Mask>One rule. Measurable</Mask>
-              <Mask>before it ships.</Mask>
-            </h2>
-            <p className="pr-section__copy pr-fade">
-              The numbers update with the threshold above. They are computed from the{" "}
-              {CLAIMS.length} claims in the case pack, so they show direction, not a forecast.
-            </p>
-          </div>
-        </div>
-        <div className="pr-stats pr-fade">
-          <div className="pr-stat">
-            <div className="pr-eyebrow">Claims replayed</div>
-            <div className="pr-stat__num">
-              <Odometer value={CLAIMS.length} />
-            </div>
-            <div className="pr-stat__note">dev + practice pack</div>
-          </div>
-          <div className="pr-stat">
-            <div className="pr-eyebrow">Change route</div>
-            <div className="pr-stat__num pr-accent">
-              <Odometer value={flipped} />
-            </div>
-            <div className="pr-stat__note">open claims, need a second look</div>
-          </div>
-          <div className="pr-stat">
-            <div className="pr-eyebrow">Human review</div>
-            <div className="pr-stat__num">
-              <Odometer value={reviewNow} />
-            </div>
-            <div className="pr-stat__note">open claims under this rule</div>
-          </div>
-          <div className="pr-stat">
-            <div className="pr-eyebrow">Sealed</div>
-            <div className="pr-stat__num">
-              <Odometer value={CLOSED.length} />
-            </div>
-            <div className="pr-stat__note">closed, keep v1</div>
-          </div>
-        </div>
-
-        <p className="pr-calc pr-fade">
-          <span className="pr-muted">With</span>{" "}
-          <Field
-            value={volume}
-            onChange={setVolume}
-            label="Claims per year"
-            onBlur={() => setVolume(num(volume).toLocaleString("en-US"))}
-          />{" "}
-          <span className="pr-muted">claims a year,</span>{" "}
-          <Field value={minutes} onChange={setMinutes} label="Minutes per human review" />{" "}
-          <span className="pr-muted">minutes per human review and €</span>
-          <Field value={rate} onChange={setRate} label="Reviewer cost per hour in euros" />
-          <span className="pr-muted">/h, this rule change means</span>{" "}
-          <span className={`pr-result ${cls}`}>
-            {n === 0
-              ? "no change in reviews"
-              : `${n > 0 ? "+" : "−"}${Math.abs(n).toLocaleString("en-US")} ${n > 0 ? "more" : "fewer"} reviews`}
-          </span>{" "}
-          <span className="pr-muted">and</span>{" "}
-          <span className={`pr-result ${cls}`}>
-            {Math.round(tCost) === 0 ? "€0" : `${tCost > 0 ? "+" : "−"}${fmtEur(Math.abs(tCost))}`}
-          </span>{" "}
-          <span className="pr-muted">reviewer cost per year.</span>
-        </p>
-        <p className="pr-calc__foot">
-          Volume, minutes and hourly cost are editable assumptions. The change in review share comes
-          from the {OPEN.length} open sample claims at the selected threshold.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function Field({
-  value,
-  onChange,
-  label,
-  onBlur,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  label: string;
-  onBlur?: () => void;
-}) {
-  return (
-    <input
-      className="pr-field"
-      value={value}
-      inputMode="numeric"
-      aria-label={label}
-      size={Math.max(2, value.length)}
-      onChange={(e) => onChange(e.target.value)}
-      onBlur={onBlur}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ page */
-
 export function LandingReplay() {
   const [threshold, setThreshold] = useState(V1_THRESHOLD);
   const [introDone, setIntroDone] = useState(false);
@@ -924,7 +776,6 @@ export function LandingReplay() {
         <nav className="pr-nav__links" aria-label="Sections">
           <a href="#replay">Replay</a>
           <a href="#second-look">Second look</a>
-          <a href="#impact">Impact</a>
         </nav>
         <div className="pr-nav__hud pr-eyebrow">
           <span className="pr-rec" title="Replay timecode: runs faster while the claims replay">
@@ -1019,11 +870,10 @@ export function LandingReplay() {
         </section>
 
         <Cards threshold={threshold} />
-        <Impact threshold={threshold} />
 
         <section className="pr-final is-reveal" ref={finalRef}>
           <div className="pr-wrap">
-            <div className="pr-eyebrow">04 · Rollout</div>
+            <div className="pr-eyebrow">03 · Rollout</div>
             <h2 className="pr-final__title">
               <Mask>Know who needs</Mask>
               <Mask>
