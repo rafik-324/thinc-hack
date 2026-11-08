@@ -35,6 +35,16 @@ import {
 import { DECISION_LABELS, IMPACT_STATS, isChanged } from "@/lib/policy-data";
 import { usePolicy } from "@/lib/policy-store";
 import { useDbImpact } from "@/lib/db-impact";
+import { Button } from "@/components/ui/button";
+import {
+  describeApply,
+  describeApplyError,
+  useApplyPolicy,
+  useApplyRunning,
+  useLatestRun,
+  usePolicies,
+} from "@/lib/policies";
+import { toast } from "sonner";
 import { useClaimSource } from "@/lib/live-claims";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +79,26 @@ const HEAT_SHADES = [
 ];
 
 function PolicyUpdate() {
-  const { overrides } = usePolicy();
+  const { overrides, mode, dataSource } = usePolicy();
+  const live = dataSource === "live";
+  const { data: run, isLoading: runLoading } = useLatestRun(mode, live);
+  const { data: policies = [] } = usePolicies();
+  const applyPolicy = useApplyPolicy();
+  const running = useApplyRunning();
+  // Uploaded but never processed: show a call to action instead of an empty comparison.
+  const notApplied =
+    live &&
+    mode !== "v1" &&
+    !runLoading &&
+    !run &&
+    policies.some((p) => p.version === mode && p.has_content);
+  // Compare only when a newer version is selected and (live) actually processed; otherwise show v1 as is.
+  const comparing = mode !== "v1" && (!live || !!run);
+  const applyNow = () =>
+    applyPolicy.mutate(mode, {
+      onSuccess: (r) => toast.success(`Policy ${mode} applied`, { description: describeApply(r) }),
+      onError: (e) => toast.error("Policy update failed", { description: describeApplyError(e) }),
+    });
   const { data: impact } = useDbImpact();
   // Same data source as the overview (demo sample or live database), never fixed sample rules.
   const { claims: CLAIMS, order: DECISION_ORDER } = useClaimSource();
@@ -87,10 +116,20 @@ function PolicyUpdate() {
   const ruleKeys = [...new Set(CLAIMS.map(ruleKey))]
     .filter((k) => k !== "—")
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  const changedPerRule = ruleKeys.map((key) => ({
-    rule: ruleLabel(key),
-    changed: changedClaims.filter((c) => ruleKey(c) === key).length,
-  }));
+  // Concrete rule names from the latest engine run (e.g. "The repair quote exceeds EUR 1200").
+  const runRows = new Map((run?.rows ?? []).map((r) => [r.case_id, r]));
+  const ruleName = (c: (typeof CLAIMS)[number]) =>
+    runRows.get(c.id)?.rule_v2_name || ruleLabel(ruleKey(c));
+  const ruleNameBefore = (c: (typeof CLAIMS)[number]) => runRows.get(c.id)?.rule_v1_name || c.rule;
+  const changedPerRule = runRows.size
+    ? [...new Set(changedClaims.map(ruleName))].sort().map((rule) => ({
+        rule,
+        changed: changedClaims.filter((c) => ruleName(c) === rule).length,
+      }))
+    : ruleKeys.map((key) => ({
+        rule: ruleLabel(key),
+        changed: changedClaims.filter((c) => ruleKey(c) === key).length,
+      }));
 
   type Kpi = {
     label: string;
@@ -103,13 +142,22 @@ function PolicyUpdate() {
 
   const fmtRate = (r: number | null | undefined) => (r == null ? "—" : `${r.toFixed(1)}%`);
   const v1 = impact?.versions.get("v1");
-  const v2 = impact?.versions.get("v2");
+  const v2 = mode === "v1" ? undefined : impact?.versions.get(mode);
   const latest = v2 ?? v1;
   const savings = latest && impact ? latest.automated * impact.perClaim : null;
 
   const kpisBig: Kpi[] = [
     { label: "Total claims", value: String(CLAIMS.length) },
-    { label: "Changed by v2", value: String(changedClaims.length) },
+    ...(comparing ? [{ label: `Changed by ${mode}`, value: String(changedClaims.length) }] : []),
+    ...(live && run
+      ? [
+          {
+            label: "Need a second look",
+            value: String(run.needs_recheck),
+            hint: `Open claims touched by an amended rule in ${run.version} (run ${new Date(run.created_at).toLocaleString("en-GB")}), including unchanged recommendations`,
+          },
+        ]
+      : []),
     {
       label: "Error rate",
       value: fmtRate(latest?.errorRate),
@@ -162,6 +210,30 @@ function PolicyUpdate() {
       <PolicyUploadBar />
       <h1 className="text-2xl font-medium tracking-normal text-foreground">Policy Update</h1>
 
+      {notApplied && (
+        <Card className="border-contrast/40">
+          <CardContent className="flex flex-wrap items-center gap-3 py-4">
+            <CircleAlert className="h-4 w-4 text-decision-specialist" />
+            <p className="text-sm text-foreground">
+              {running ? (
+                <>
+                  Applying policy <span className="font-mono">{mode}</span>: reading the policy and
+                  re-checking every claim (about half a minute)…
+                </>
+              ) : (
+                <>
+                  Policy <span className="font-mono">{mode}</span> is uploaded but has not been
+                  applied to the claims yet.
+                </>
+              )}
+            </p>
+            <Button size="sm" className="ml-auto h-8 text-xs" disabled={running} onClick={applyNow}>
+              {running ? "Running engine…" : `Apply ${mode} now`}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="flex flex-wrap items-stretch divide-x divide-border p-0">
           {kpisBig.map((kpi) => (
@@ -197,219 +269,261 @@ function PolicyUpdate() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {!comparing && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Decision heatmap: v1 × v2</CardTitle>
+            <CardTitle className="text-base">Decisions under policy v1</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th className="p-2 text-left text-xs font-medium text-muted-foreground">
-                      v1 \ v2
-                    </th>
-                    {DECISION_ORDER.map((d) => (
-                      <th
-                        key={d}
-                        className="p-2 text-center text-xs font-medium text-muted-foreground"
-                      >
-                        {DECISION_LABELS[d]}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {DECISION_ORDER.map((rowDecision, row) => (
-                    <tr key={rowDecision}>
-                      <td className="p-2 text-xs font-medium text-muted-foreground">
-                        {DECISION_LABELS[rowDecision]}
-                      </td>
-                      {DECISION_ORDER.map((colDecision, col) => {
-                        const count = matrix[row]?.[col] ?? 0;
-                        const offDiagonal = row !== col && count > 0;
-                        return (
-                          <td key={colDecision} className="p-1">
-                            <div
-                              className={cn(
-                                "flex h-12 items-center justify-center rounded-md text-sm font-mono tabular-nums font-medium",
-                                offDiagonal
-                                  ? "bg-foreground/[0.04] ring-1 ring-inset ring-foreground/15"
-                                  : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
-                                      HEAT_SHADES[0]),
-                                count > 0 ? "text-foreground" : "text-muted-foreground",
-                              )}
-                            >
-                              {count}
-                            </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {DECISION_ORDER.map((d) => (
+                <div
+                  key={d}
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2.5"
+                >
+                  <DecisionBadge decision={d} />
+                  <span className="font-mono text-lg tabular-nums font-medium text-foreground">
+                    {CLAIMS.filter((c) => c.decisionV1 === d).length}
+                  </span>
+                </div>
+              ))}
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Highlighted cells off the diagonal are claims whose decision changes under v2.
+            <p className="text-xs text-muted-foreground">
+              Only the current policy is active. Upload a new policy above to see which open claims
+              change and why.
             </p>
           </CardContent>
         </Card>
+      )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Changed claims per rule</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={changedPerRule}
-                  margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
-                >
-                  <defs>
-                    {/* Nearly transparent at the base, solid grey at the top of each bar. */}
-                    <linearGradient id="changed-bar-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 1 }} />
-                      <stop
-                        offset="25%"
-                        style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0.45 }}
-                      />
-                      <stop
-                        offset="100%"
-                        style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0 }}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="rule"
-                    tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
-                    axisLine={{ stroke: "var(--color-border)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "var(--color-muted)" }}
-                    contentStyle={{
-                      background: "var(--color-popover)",
-                      border: "1px solid var(--color-border)",
-                      borderRadius: "var(--radius-md)",
-                      color: "var(--color-popover-foreground)",
-                      fontSize: 13,
-                    }}
-                  />
-                  <Bar dataKey="changed" name="Changed claims" radius={[6, 6, 0, 0]}>
-                    {changedPerRule.map((entry) => (
-                      <Cell
-                        key={entry.rule}
-                        fill={
-                          entry.changed > 0 ? "url(#changed-bar-gradient)" : "var(--color-muted)"
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {comparing && (
+        <>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Decision heatmap: v1 × {mode}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr>
+                        <th className="p-2 text-left text-xs font-medium text-muted-foreground">
+                          v1 \ {mode}
+                        </th>
+                        {DECISION_ORDER.map((d) => (
+                          <th
+                            key={d}
+                            className="p-2 text-center text-xs font-medium text-muted-foreground"
+                          >
+                            {DECISION_LABELS[d]}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DECISION_ORDER.map((rowDecision, row) => (
+                        <tr key={rowDecision}>
+                          <td className="p-2 text-xs font-medium text-muted-foreground">
+                            {DECISION_LABELS[rowDecision]}
+                          </td>
+                          {DECISION_ORDER.map((colDecision, col) => {
+                            const count = matrix[row]?.[col] ?? 0;
+                            const offDiagonal = row !== col && count > 0;
+                            return (
+                              <td key={colDecision} className="p-1">
+                                <div
+                                  className={cn(
+                                    "flex h-12 items-center justify-center rounded-md text-sm font-mono tabular-nums font-medium",
+                                    offDiagonal
+                                      ? "bg-foreground/[0.04] ring-1 ring-inset ring-foreground/15"
+                                      : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
+                                          HEAT_SHADES[0]),
+                                    count > 0 ? "text-foreground" : "text-muted-foreground",
+                                  )}
+                                >
+                                  {count}
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Highlighted cells off the diagonal are claims whose decision changes under {mode}.
+                </p>
+              </CardContent>
+            </Card>
 
-      <Collapsible asChild>
-        <Card>
-          <CardHeader className="p-0">
-            <CollapsibleTrigger className="group flex w-full items-center gap-2 p-6 text-left">
-              <ChevronRight
-                aria-hidden="true"
-                className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90"
-                strokeWidth={1.5}
-              />
-              <CardTitle className="text-base">Changed claims</CardTitle>
-              <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
-                {changedClaims.length}
-              </span>
-            </CollapsibleTrigger>
-          </CardHeader>
-          <CollapsibleContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Claim ID</TableHead>
-                  <TableHead>Rule</TableHead>
-                  <TableHead>v1</TableHead>
-                  <TableHead />
-                  <TableHead>v2</TableHead>
-                  <TableHead>Decisive fact</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {changedClaims.map((claim) => (
-                  <TableRow key={claim.id}>
-                    <TableCell>
-                      <Link
-                        to="/queue"
-                        search={{ claim: claim.id }}
-                        className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
-                      >
-                        {claim.id}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono tabular-nums">
-                        {claim.rule}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DecisionBadge decision={claim.decisionV1} />
-                    </TableCell>
-                    <TableCell>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                    <TableCell>
-                      <DecisionBadge decision={claim.decisionV2} />
-                    </TableCell>
-                    <TableCell className="max-w-md">
-                      <span className="line-clamp-2 text-sm text-muted-foreground">
-                        {claim.decisiveFact}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
-
-      <div>
-        <h2 className="text-lg font-medium tracking-normal text-foreground">Is it correct?</h2>
-        <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {correctness.map((item) => (
-            <Card key={item.label}>
-              <CardContent className="flex items-start gap-3 pt-6">
-                <item.icon className={cn("mt-0.5 h-5 w-5", item.className)} />
-                <div>
-                  <p className="text-2xl font-mono tabular-nums font-medium text-foreground">
-                    {item.count}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Changed claims per rule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={changedPerRule}
+                      margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+                    >
+                      <defs>
+                        {/* Nearly transparent at the base, solid grey at the top of each bar. */}
+                        <linearGradient id="changed-bar-gradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop
+                            offset="0%"
+                            style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 1 }}
+                          />
+                          <stop
+                            offset="25%"
+                            style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0.45 }}
+                          />
+                          <stop
+                            offset="100%"
+                            style={{ stopColor: "oklch(0.55 0 0)", stopOpacity: 0 }}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--color-border)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="rule"
+                        tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
+                        axisLine={{ stroke: "var(--color-border)" }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "var(--color-muted)" }}
+                        contentStyle={{
+                          background: "var(--color-popover)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-md)",
+                          color: "var(--color-popover-foreground)",
+                          fontSize: 13,
+                        }}
+                      />
+                      <Bar dataKey="changed" name="Changed claims" radius={[6, 6, 0, 0]}>
+                        {changedPerRule.map((entry) => (
+                          <Cell
+                            key={entry.rule}
+                            fill={
+                              entry.changed > 0
+                                ? "url(#changed-bar-gradient)"
+                                : "var(--color-muted)"
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </div>
+          </div>
+
+          <Collapsible asChild defaultOpen>
+            <Card>
+              <CardHeader className="p-0">
+                <CollapsibleTrigger className="group flex w-full items-center gap-2 p-6 text-left">
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90"
+                    strokeWidth={1.5}
+                  />
+                  <CardTitle className="text-base">Changed claims</CardTitle>
+                  <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+                    {changedClaims.length}
+                  </span>
+                </CollapsibleTrigger>
+              </CardHeader>
+              <CollapsibleContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Claim ID</TableHead>
+                      <TableHead>Rule</TableHead>
+                      <TableHead>v1</TableHead>
+                      <TableHead />
+                      <TableHead>{mode}</TableHead>
+                      <TableHead>Decisive fact</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {changedClaims.map((claim) => (
+                      <TableRow key={claim.id}>
+                        <TableCell>
+                          <Link
+                            to="/queue"
+                            search={{ claim: claim.id }}
+                            className="font-mono tabular-nums font-medium text-foreground underline-offset-4 hover:underline"
+                          >
+                            {claim.id}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className="block max-w-xs text-sm text-foreground"
+                            title={`Before: ${ruleNameBefore(claim)}`}
+                          >
+                            {ruleName(claim)}
+                          </span>
+                          <span className="block max-w-xs text-xs text-muted-foreground">
+                            was: {ruleNameBefore(claim)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DecisionBadge decision={claim.decisionV1} />
+                        </TableCell>
+                        <TableCell>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        </TableCell>
+                        <TableCell>
+                          <DecisionBadge decision={claim.decisionV2} />
+                        </TableCell>
+                        <TableCell className="max-w-md">
+                          <span className="line-clamp-2 text-sm text-muted-foreground">
+                            {claim.decisiveFact}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
+          <div>
+            <h2 className="text-lg font-medium tracking-normal text-foreground">Is it correct?</h2>
+            <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {correctness.map((item) => (
+                <Card key={item.label}>
+                  <CardContent className="flex items-start gap-3 pt-6">
+                    <item.icon className={cn("mt-0.5 h-5 w-5", item.className)} />
+                    <div>
+                      <p className="text-2xl font-mono tabular-nums font-medium text-foreground">
+                        {item.count}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
