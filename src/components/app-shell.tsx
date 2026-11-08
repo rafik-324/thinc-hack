@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowRightLeft, History, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
+import { ArrowRightLeft, History, Inbox, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ import { TaktileLogo } from "@/components/taktile-logo";
 
 const NAV_ITEMS = [
   { title: "Overview", to: "/queue", icon: LayoutGrid },
+  { title: "Submitted", to: "/submitted", icon: Inbox },
   { title: "Update", to: "/update", icon: RefreshCw },
   { title: "History", to: "/history", icon: History },
 ] as const;

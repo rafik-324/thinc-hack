@@ -10,13 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as QueueRouteImport } from './routes/queue'
+import { Route as SubmittedRouteImport } from './routes/submitted'
 import { Route as UpdateRouteImport } from './routes/update'
+import { Route as SubmittedReferenceRouteImport } from './routes/submitted.$reference'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -29,43 +37,86 @@ const QueueRoute = QueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubmittedRoute = SubmittedRouteImport.update({
+  id: '/submitted',
+  path: '/submitted',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UpdateRoute = UpdateRouteImport.update({
   id: '/update',
   path: '/update',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubmittedReferenceRoute = SubmittedReferenceRouteImport.update({
+  id: '/$reference',
+  path: '/$reference',
+  getParentRoute: () => SubmittedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/submitted': typeof SubmittedRouteWithChildren
   '/update': typeof UpdateRoute
+  '/submitted/$reference': typeof SubmittedReferenceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/submitted': typeof SubmittedRouteWithChildren
   '/update': typeof UpdateRoute
+  '/submitted/$reference': typeof SubmittedReferenceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
   '/queue': typeof QueueRoute
+  '/submitted': typeof SubmittedRouteWithChildren
   '/update': typeof UpdateRoute
+  '/submitted/$reference': typeof SubmittedReferenceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/history' | '/queue' | '/update'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/history'
+    | '/queue'
+    | '/submitted'
+    | '/update'
+    | '/submitted/$reference'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/queue' | '/update'
-  id: '__root__' | '/' | '/history' | '/queue' | '/update'
+  to:
+    | '/'
+    | '/auth'
+    | '/history'
+    | '/queue'
+    | '/submitted'
+    | '/update'
+    | '/submitted/$reference'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/history'
+    | '/queue'
+    | '/submitted'
+    | '/update'
+    | '/submitted/$reference'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   HistoryRoute: typeof HistoryRoute
   QueueRoute: typeof QueueRoute
+  SubmittedRoute: typeof SubmittedRouteWithChildren
   UpdateRoute: typeof UpdateRoute
 }
 
@@ -76,6 +127,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -92,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QueueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/submitted': {
+      id: '/submitted'
+      path: '/submitted'
+      fullPath: '/submitted'
+      preLoaderRoute: typeof SubmittedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/update': {
       id: '/update'
       path: '/update'
@@ -99,13 +164,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/submitted/$reference': {
+      id: '/submitted/$reference'
+      path: '/$reference'
+      fullPath: '/submitted/$reference'
+      preLoaderRoute: typeof SubmittedReferenceRouteImport
+      parentRoute: typeof SubmittedRoute
+    }
   }
 }
 
+interface SubmittedRouteChildren {
+  SubmittedReferenceRoute: typeof SubmittedReferenceRoute
+}
+
+const SubmittedRouteChildren: SubmittedRouteChildren = {
+  SubmittedReferenceRoute: SubmittedReferenceRoute,
+}
+
+const SubmittedRouteWithChildren = SubmittedRoute._addFileChildren(
+  SubmittedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   HistoryRoute: HistoryRoute,
   QueueRoute: QueueRoute,
+  SubmittedRoute: SubmittedRouteWithChildren,
   UpdateRoute: UpdateRoute,
 }
 export const routeTree = rootRouteImport
