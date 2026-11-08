@@ -14,7 +14,8 @@ const LIVE_DECISIONS = new Set<string>(LIVE_DECISION_ORDER);
 const toDecision = (value: string | undefined): Decision =>
   value && LIVE_DECISIONS.has(value) ? (value as Decision) : "human_review";
 
-async function fetchLiveClaims(): Promise<Claim[]> {
+/** `version` is the policy compared against v1 (the selected policy version). */
+async function fetchLiveClaims(version: string): Promise<Claim[]> {
   const [claimsRes, decisionsRes] = await Promise.all([
     supabase.from("claims").select("*").order("case_id"),
     supabase.from("decisions").select("*"),
@@ -25,7 +26,8 @@ async function fetchLiveClaims(): Promise<Claim[]> {
   return claimsRes.data.map((row) => {
     const decisions = decisionsRes.data.filter((d) => d.case_id === row.case_id);
     const v1 = decisions.find((d) => d.policy_version.startsWith("v1")) ?? decisions[0];
-    const v2 = decisions.find((d) => d.policy_version.startsWith("v2"));
+    // Closed claims have no row for a newer version: they keep their v1 decision.
+    const v2 = version === "v1" ? undefined : decisions.find((d) => d.policy_version === version);
     const fields = (row.source_fields ?? {}) as Record<string, unknown>;
     const amount = Number(fields["quote_eur"] ?? 0);
     const facts = (v1?.supporting_facts ?? {}) as Record<string, unknown>;
@@ -58,10 +60,10 @@ async function fetchLiveClaims(): Promise<Claim[]> {
 
 /** Claims for the currently chosen data source (demo sample data or the live database). */
 export function useClaimSource() {
-  const { dataSource } = usePolicy();
+  const { dataSource, mode } = usePolicy();
   const live = useQuery({
-    queryKey: ["live-claims"],
-    queryFn: fetchLiveClaims,
+    queryKey: ["live-claims", mode],
+    queryFn: () => fetchLiveClaims(mode),
     enabled: dataSource === "live",
   });
   if (dataSource === "demo") {

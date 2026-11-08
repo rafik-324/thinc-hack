@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { readPolicyFile } from "@/lib/policy-file";
 
@@ -54,5 +54,131 @@ export function useUploadPolicy() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["policies"] }),
+  });
+}
+
+/** Python backend (python3 -m backend). Override with VITE_REVIEWER_API_URL. */
+export const REVIEWER_API = (
+  (import.meta.env["VITE_REVIEWER_API_URL"] as string | undefined) || "http://127.0.0.1:8765"
+).replace(/\/$/, "");
+
+export interface ApplyCitation {
+  target: string;
+  old_quote: string;
+  new_quote: string;
+}
+
+/** Response of POST /api/policies/{version}/apply (backend/policy_apply.py). */
+export interface ApplyResult {
+  version: string;
+  baseline_version: string;
+  claims_total: number;
+  open_evaluated: number;
+  closed_retained: number;
+  changed: number;
+  needs_recheck: number;
+  config_created: boolean;
+  summary: string | null;
+  citations: ApplyCitation[];
+  errors: unknown[];
+}
+
+export class ApplyError extends Error {
+  constructor(
+    message: string,
+    public problems: string[] = [],
+  ) {
+    super(message);
+  }
+}
+
+/**
+ * Runs the engine for one uploaded policy version: the backend interprets the policy text
+ * (LLM, checked against verbatim quotes), re-evaluates every current claim and stores one
+ * decision per open claim for that version in Supabase.
+ */
+export function useApplyPolicy() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: APPLY_KEY,
+    mutationFn: async (version: string): Promise<ApplyResult> => {
+      let res: Response;
+      try {
+        res = await fetch(`${REVIEWER_API}/api/policies/${encodeURIComponent(version)}/apply`, {
+          method: "POST",
+        });
+      } catch {
+        throw new ApplyError(
+          `Backend not reachable at ${REVIEWER_API}. Start it with: python3 -m backend --ui-origin ${window.location.origin}`,
+        );
+      }
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new ApplyError(body?.error ?? `Backend error ${res.status}`, body?.problems ?? []);
+      }
+      return body as ApplyResult;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["live-claims"] });
+      qc.invalidateQueries({ queryKey: ["db-impact"] });
+      qc.invalidateQueries({ queryKey: ["policies"] });
+      qc.invalidateQueries({ queryKey: ["policy-run"] });
+    },
+  });
+}
+
+const APPLY_KEY = ["apply-policy"];
+
+/** True while any engine run started from anywhere in the app is still in progress. */
+export function useApplyRunning() {
+  return useIsMutating({ mutationKey: APPLY_KEY }) > 0;
+}
+
+export function describeApply(r: ApplyResult) {
+  return `${r.open_evaluated} open claims re-checked · ${r.changed} changed · ${r.needs_recheck} need a second look · ${r.closed_retained} closed kept`;
+}
+
+export function describeApplyError(e: unknown) {
+  const err = e as ApplyError;
+  return [err.message, ...(err.problems ?? [])].join(" · ");
+}
+
+/** Latest engine run of one version (policy_runs, written by the backend). null = not applied yet. */
+export interface PolicyRun {
+  id: number;
+  version: string;
+  baseline_version: string;
+  claims_total: number;
+  open_evaluated: number;
+  closed_retained: number;
+  changed: number;
+  needs_recheck: number;
+  created_at: string;
+  /** Per claim: concrete engine rule (id + readable name) under the old and the new version. */
+  rows: {
+    case_id: string;
+    rule_v1: string;
+    rule_v2: string;
+    rule_v1_name?: string;
+    rule_v2_name?: string;
+  }[];
+}
+
+export function useLatestRun(version: string, enabled = true) {
+  return useQuery({
+    queryKey: ["policy-run", version],
+    enabled: enabled && version !== "v1",
+    queryFn: async (): Promise<PolicyRun | null> => {
+      const { data, error } = await db
+        .from("policy_runs")
+        .select(
+          "id,version,baseline_version,claims_total,open_evaluated,closed_retained,changed,needs_recheck,created_at,rows",
+        )
+        .eq("version", version)
+        .order("id", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return (data as PolicyRun[])[0] ?? null;
+    },
   });
 }

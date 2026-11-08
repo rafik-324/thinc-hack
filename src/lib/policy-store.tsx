@@ -56,7 +56,8 @@ const SEED_OVERRIDES: Override[] = [
 ];
 
 export function PolicyProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<VersionMode>("v2");
+  // v1 is the baseline; the top bar switches to the newest uploaded version once policies load.
+  const [mode, setMode] = useState<VersionMode>("v1");
   const [dataSource, setDataSource] = useState<DataSource>("live");
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Override[]>(SEED_OVERRIDES);

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { usePolicy } from "@/lib/policy-store";
 import type { VersionMode } from "@/lib/policy-data";
-import { usePolicies } from "@/lib/policies";
+import { describeApply, describeApplyError, useApplyPolicy, usePolicies } from "@/lib/policies";
 import { cn } from "@/lib/utils";
 import { TaktileLogo } from "@/components/taktile-logo";
 
@@ -28,18 +28,45 @@ const NAV_ITEMS = [
 
 
 function TopBar() {
-  const { mode, setMode, dataSource, setDataSource } = usePolicy();
-  const { data: policies = [] } = usePolicies();
+  const { mode, setMode, dataSource } = usePolicy();
+  const { data: allPolicies = [] } = usePolicies();
+  // Only versions that really exist with an uploaded text; empty placeholders are hidden.
+  const policies = allPolicies.filter((p) => p.has_content);
   const labelOf = (v: string) => policies.find((p) => p.version === v)?.name ?? `Policy ${v}`;
   const [pending, setPending] = useState<VersionMode>(mode);
   const dirty = pending !== mode;
 
   useEffect(() => setPending(mode), [mode]);
 
+  // Never point at a version that does not exist: fall back to the newest uploaded one.
+  const versions = policies.map((p) => p.version);
+  const versionKey = versions.join("|");
+  // On first load pick the newest uploaded version (just v1 while it is the only policy);
+  // afterwards only correct a selection that no longer exists.
+  const initialised = useRef(false);
+  useEffect(() => {
+    const list = versionKey ? versionKey.split("|") : [];
+    const newest = list[list.length - 1];
+    if (!newest) return;
+    if (!initialised.current || !list.includes(mode)) setMode(newest);
+    initialised.current = true;
+  }, [versionKey, mode, setMode]);
+
+  const applyPolicy = useApplyPolicy();
+
   const apply = () => {
-    setMode(pending);
-    toast.success(`${labelOf(pending)} aktualisiert`, {
-      description: "25 Claims wurden neu geprüft.",
+    // v1 is the baseline every claim was decided with; test data has no backend.
+    if (pending === "v1" || dataSource === "demo") {
+      setMode(pending);
+      toast.success(`${labelOf(pending)} active`);
+      return;
+    }
+    applyPolicy.mutate(pending, {
+      onSuccess: (result) => {
+        setMode(pending);
+        toast.success(`${labelOf(pending)} applied`, { description: describeApply(result) });
+      },
+      onError: (e) => toast.error("Policy update failed", { description: describeApplyError(e) }),
     });
   };
 
@@ -52,24 +79,7 @@ function TopBar() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <span className="eyebrow hidden sm:block">Daten</span>
-        <div role="group" aria-label="Datenquelle" className="flex h-8 items-center rounded-sm border border-border p-0.5">
-          {(["demo", "live"] as const).map((source) => (
-            <button
-              key={source}
-              type="button"
-              aria-pressed={dataSource === source}
-              onClick={() => setDataSource(source)}
-              className={
-                "h-full rounded-[6px] px-2.5 text-xs font-medium transition-colors " +
-                (dataSource === source ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")
-              }
-            >
-              {source === "demo" ? "Testdaten" : "Live"}
-            </button>
-          ))}
-        </div>
-        <span className="eyebrow ml-2 hidden sm:block">Policy Version</span>
+        <span className="eyebrow hidden sm:block">Policy Version</span>
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
             aria-label="Policy version"
@@ -78,16 +88,21 @@ function TopBar() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {(policies.some((p) => p.version === pending) ? policies.map((p) => p.version) : [pending, ...policies.map((p) => p.version)]).map((version) => (
+            {versions.map((version) => (
               <SelectItem key={version} value={version} className="font-mono text-xs">
                 {labelOf(version)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" className="relative rounded-sm text-xs" onClick={apply}>
+        <Button
+          size="sm"
+          className="relative rounded-sm text-xs"
+          onClick={apply}
+          disabled={applyPolicy.isPending}
+        >
           <ArrowRightLeft size={14} strokeWidth={1.5} />
-          Change policy
+          {applyPolicy.isPending ? "Running engine…" : "Change policy"}
           {dirty && (
             <span aria-hidden="true" className="absolute -right-1 -top-1 size-1.5 rounded-full bg-contrast" />
           )}
