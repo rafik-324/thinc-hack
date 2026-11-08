@@ -19,7 +19,6 @@ import { TaktileLogo } from "@/components/taktile-logo";
 
 const NAV_ITEMS = [
   { title: "Overview", to: "/queue", icon: LayoutGrid },
-  { title: "Submitted", to: "/submitted", icon: Inbox },
   { title: "Policy Update", to: "/update", icon: RefreshCw },
   { title: "History", to: "/history", icon: History },
 ] as const;
@@ -44,14 +43,14 @@ function TopBar() {
   };
 
   return (
-    <div className="fixed left-3 right-3 top-3 z-30 flex h-12 items-center justify-between rounded-full border border-border bg-card px-4">
-      <Link to="/" className="flex items-center gap-2 pl-1">
+    <header className="fixed left-3 right-3 top-3 z-30 flex h-12 items-center justify-between rounded-full border border-border bg-card px-2 sm:px-4">
+      <Link to="/" aria-label="Retakt home" className="flex shrink-0 items-center gap-2 pl-1">
         <TaktileLogo className="size-5 text-foreground" />
-        <span aria-hidden="true" className="mx-1.5 h-4 w-px bg-foreground/20" />
-        <span className="text-sm font-medium tracking-normal text-foreground">Retakt</span>
+        <span aria-hidden="true" className="mx-1.5 hidden h-4 w-px bg-foreground/20 sm:block" />
+        <span className="hidden text-sm font-medium tracking-normal text-foreground sm:inline">Retakt</span>
       </Link>
 
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         <span className="eyebrow hidden sm:block">Daten</span>
         <div role="group" aria-label="Datenquelle" className="flex h-8 items-center rounded-sm border border-border p-0.5">
           {(["demo", "live"] as const).map((source) => (
@@ -73,7 +72,7 @@ function TopBar() {
         <Select value={pending} onValueChange={(value) => setPending(value as VersionMode)}>
           <SelectTrigger
             aria-label="Policy version"
-            className="h-8 w-32 rounded-sm font-mono tabular-nums text-xs"
+            className="h-8 w-20 rounded-sm font-mono tabular-nums text-xs sm:w-32"
           >
             <SelectValue />
           </SelectTrigger>
@@ -85,15 +84,26 @@ function TopBar() {
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" className="relative rounded-sm text-xs" onClick={apply}>
-          <ArrowRightLeft size={14} strokeWidth={1.5} />
-          Change policy
+        <Button size="sm" title="Change policy" className="relative rounded-sm text-xs max-sm:w-8 max-sm:px-0" onClick={apply}>
+          <ArrowRightLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+          <span className="sr-only sm:not-sr-only">Change policy</span>
           {dirty && (
             <span aria-hidden="true" className="absolute -right-1 -top-1 size-1.5 rounded-full bg-contrast" />
           )}
         </Button>
+        <Link
+          to="/submitted"
+          aria-label="Submitted claims"
+          title="Submitted claims"
+          activeOptions={{ includeSearch: false }}
+          activeProps={{ className: "bg-accent text-foreground" }}
+          inactiveProps={{ className: "text-muted-foreground" }}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <Inbox size={18} strokeWidth={1.5} aria-hidden="true" />
+        </Link>
       </div>
-    </div>
+    </header>
   );
 }
 
