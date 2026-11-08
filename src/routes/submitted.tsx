@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Inbox, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { StaffGate } from "@/components/staff-gate";
+import { supabase } from "@/integrations/supabase/client";
+import { demoRows, findDemoClaim, StaffGate, SubmittedStaff } from "@/components/staff-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listSubmittedClaims, type InboxClaim } from "@/lib/staff-inbox.functions";
@@ -31,10 +32,23 @@ export const Route = createFileRoute("/submitted")({
 
 function SubmittedLayout() {
   const detail = useMatch({ from: "/submitted/$reference", shouldThrow: false });
-  return detail ? <Outlet /> : <SubmittedPage />;
+  const [staffId, setStaffId] = useState<string | null>(null);
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setStaffId(session?.user.app_metadata?.["staff"] === true ? session.user.id : null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+  return (
+    <SubmittedStaff.Provider key={staffId ?? "demo"} value={staffId}>
+      {detail ? <Outlet /> : <SubmittedPage demo={!staffId} />}
+    </SubmittedStaff.Provider>
+  );
 }
 
-function SubmittedPage() {
+function SubmittedPage({ demo }: { demo: boolean }) {
   const navigate = useNavigate();
   const fetchInbox = useServerFn(listSubmittedClaims);
 
@@ -47,10 +61,10 @@ function SubmittedPage() {
 
   const loadPage = useCallback(
     async (cursor?: string) => {
-      const page = await fetchInbox({ data: cursor ? { cursor } : {} });
-      return page;
+      if (demo) return { claims: demoRows, next_cursor: null };
+      return fetchInbox({ data: cursor ? { cursor } : {} });
     },
-    [fetchInbox],
+    [demo, fetchInbox],
   );
 
   const loadFirst = useCallback(() => {
@@ -96,30 +110,36 @@ function SubmittedPage() {
       <div className="rounded-lg border border-border bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="eyebrow">Submitted claims</p>
+            <p className="eyebrow">{demo ? "Demo inbox" : "Submitted claims"}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {loading ? "Loading inbox…" : `${claims.length} claim${claims.length === 1 ? "" : "s"} loaded`}
+              {demo
+                ? "Two sample claims. Open a quote to compare V1 and V2."
+                : loading
+                  ? "Loading inbox…"
+                  : `${claims.length} claim${claims.length === 1 ? "" : "s"} loaded`}
             </p>
           </div>
-          <form
-            className="flex items-center gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              lookup();
-            }}
-          >
-            <Input
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              placeholder="Receipt reference (CLM-…)"
-              aria-label="Receipt reference"
-              className="h-8 w-56 rounded-sm font-mono text-xs tabular-nums"
-            />
-            <Button type="submit" size="sm" variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
-              <Search size={13} strokeWidth={1.5} />
-              Look up
-            </Button>
-          </form>
+          {!demo && (
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                lookup();
+              }}
+            >
+              <Input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder="Receipt reference (CLM-…)"
+                aria-label="Receipt reference"
+                className="h-8 w-56 rounded-sm font-mono text-xs tabular-nums"
+              />
+              <Button type="submit" size="sm" variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
+                <Search size={13} strokeWidth={1.5} />
+                Look up
+              </Button>
+            </form>
+          )}
         </div>
       </div>
 
@@ -146,9 +166,11 @@ function SubmittedPage() {
                     title={claim.reference}
                     className="min-w-0 flex-1 truncate font-mono text-sm tabular-nums text-foreground"
                   >
-                    {claim.reference}
+                    {demo ? findDemoClaim(claim.reference)?.title : claim.reference}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{claim.rule_id ?? "—"}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                    {demo ? claim.reference : (claim.rule_id ?? "—")}
+                  </span>
                   {claim.recommendation && (
                     <span
                       className={cn(
