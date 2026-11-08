@@ -20,8 +20,7 @@ const ERR = {
 } as const;
 
 function requireStaff(claims: unknown): void {
-  const appMetadata = (claims as { app_metadata?: Record<string, unknown> } | null)
-    ?.app_metadata;
+  const appMetadata = (claims as { app_metadata?: Record<string, unknown> } | null)?.app_metadata;
   // Only verified app_metadata counts — user-editable metadata is never trusted.
   if (appMetadata?.["staff"] !== true) {
     throw new Error(ERR.forbidden);
@@ -43,11 +42,10 @@ async function staffPost(pathKey: UpstreamKey, body: Record<string, unknown>) {
 
   const response = await fetch(new URL(UPSTREAM_PATHS[pathKey], base), {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${reviewerKey}`,
-    },
-    body: JSON.stringify(body),
+    headers: { "content-type": "application/json" },
+    redirect: "error",
+    cache: "no-store",
+    body: JSON.stringify({ ...body, reviewer_key: reviewerKey }),
   });
   if (!response.ok) throw new Error(`${ERR.upstream} (${response.status})`);
   return response.json();
@@ -86,7 +84,6 @@ function validRevision(value: unknown): number {
 
 export interface InboxClaim {
   reference: string;
-  category?: string;
   recommendation?: string;
   effective_recommendation?: string;
   revision?: number;
@@ -107,11 +104,23 @@ export const listSubmittedClaims = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<InboxPage> => {
     requireStaff(context.claims);
     const result = (await staffPost("inbox", data.cursor ? { cursor: data.cursor } : {})) as {
-      claims?: InboxClaim[];
+      claims?: Array<{
+        reference: string;
+        submitted_at?: string;
+        category?: ReviewerEvidence["category"];
+      }>;
       next_cursor?: string | null;
     };
+    if (!Array.isArray(result?.claims)) throw new Error(ERR.upstream);
     return {
-      claims: Array.isArray(result?.claims) ? result.claims : [],
+      claims: result.claims.map(({ reference, submitted_at, category }) => ({
+        reference,
+        submitted_at,
+        recommendation: category?.recommendation,
+        effective_recommendation: category?.effective_recommendation,
+        revision: category?.revision,
+        rule_id: category?.rule_id,
+      })),
       next_cursor: typeof result?.next_cursor === "string" ? result.next_cursor : null,
     };
   });
@@ -149,7 +158,39 @@ export const getClaimEvidence = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }): Promise<ReviewerEvidence> => {
     requireStaff(context.claims);
-    return (await staffPost("reviewer", { reference: data.reference })) as ReviewerEvidence;
+    const result = (await staffPost("reviewer", { reference: data.reference })) as Omit<
+      ReviewerEvidence,
+      "corrections"
+    > & {
+      corrections?: Array<{
+        previous_recommendation?: string;
+        recommendation?: string;
+        reason?: string;
+        reviewer?: string;
+        created_at?: string;
+      }>;
+    };
+    const decision = result.evidence?.decision;
+    return {
+      reference: result.reference,
+      category: result.category,
+      evidence: {
+        decision: decision && {
+          primary_rule_id: decision.primary_rule_id,
+          policy_version: decision.policy_version,
+          recommendation: decision.recommendation,
+          audit: { detail: { employee: { why: decision.audit?.detail?.employee?.why } } },
+        },
+      },
+      documents: result.documents?.map(({ name, position }) => ({ name, position })),
+      corrections: result.corrections?.map((entry) => ({
+        previous: entry.previous_recommendation,
+        next: entry.recommendation,
+        reason: entry.reason,
+        reviewer: entry.reviewer,
+        at: entry.created_at,
+      })),
+    };
   });
 
 export interface ClaimDocument {

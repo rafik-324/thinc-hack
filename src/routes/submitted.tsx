@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatch, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Inbox, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -6,10 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StaffGate } from "@/components/staff-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  listSubmittedClaims,
-  type InboxClaim,
-} from "@/lib/staff-inbox.functions";
+import { listSubmittedClaims, type InboxClaim } from "@/lib/staff-inbox.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/submitted")({
@@ -29,8 +26,13 @@ export const Route = createFileRoute("/submitted")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: SubmittedPage,
+  component: SubmittedLayout,
 });
+
+function SubmittedLayout() {
+  const detail = useMatch({ from: "/submitted/$reference", shouldThrow: false });
+  return detail ? <Outlet /> : <SubmittedPage />;
+}
 
 function SubmittedPage() {
   const navigate = useNavigate();
@@ -109,7 +111,7 @@ function SubmittedPage() {
             <Input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="Receipt reference, e.g. SUB-1042"
+              placeholder="Receipt reference (CLM-…)"
               aria-label="Receipt reference"
               className="h-8 w-56 rounded-sm font-mono text-xs tabular-nums"
             />
@@ -140,18 +142,18 @@ function SubmittedPage() {
                   params={{ reference: claim.reference }}
                   className="group flex items-center gap-4 px-5 py-3 transition-colors hover:bg-accent/40"
                 >
-                  <span className="w-36 shrink-0 font-mono text-sm tabular-nums text-foreground">
+                  <span
+                    title={claim.reference}
+                    className="min-w-0 flex-1 truncate font-mono text-sm tabular-nums text-foreground"
+                  >
                     {claim.reference}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-                    {claim.category ?? "—"}
-                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{claim.rule_id ?? "—"}</span>
                   {claim.recommendation && (
                     <span
                       className={cn(
                         "shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide",
-                        claim.effective_recommendation &&
-                          claim.effective_recommendation !== claim.recommendation
+                        claim.effective_recommendation && claim.effective_recommendation !== claim.recommendation
                           ? "text-muted-foreground line-through"
                           : "text-foreground",
                       )}
@@ -159,12 +161,11 @@ function SubmittedPage() {
                       {claim.recommendation}
                     </span>
                   )}
-                  {claim.effective_recommendation &&
-                    claim.effective_recommendation !== claim.recommendation && (
-                      <span className="shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-foreground">
-                        {claim.effective_recommendation}
-                      </span>
-                    )}
+                  {claim.effective_recommendation && claim.effective_recommendation !== claim.recommendation && (
+                    <span className="shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-foreground">
+                      {claim.effective_recommendation}
+                    </span>
+                  )}
                   <ArrowRight
                     size={14}
                     strokeWidth={1.5}
