@@ -5,9 +5,22 @@ import { ArrowLeft, Download, FileText, PencilLine } from "lucide-react";
 import { useContext, useState } from "react";
 import { toast } from "sonner";
 
-import { SubmittedStaff, demoDocument, demoEvidence, findDemoClaim, StaffGate } from "@/components/staff-gate";
+import {
+  SubmittedStaff,
+  demoDocument,
+  demoEvidence,
+  findDemoClaim,
+  StaffGate,
+} from "@/components/staff-gate";
 import { Button } from "@/components/ui/button";
-import { getClaimDocument, getClaimEvidence, getPolicyReplay } from "@/lib/staff-inbox.functions";
+import {
+  getClaimDocument,
+  getClaimEvidence,
+  getPolicyReplay,
+  getJudgeEvidence,
+  getJudgeDocument,
+  getJudgeReplay,
+} from "@/lib/staff-inbox.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/submitted/$reference")({
@@ -42,12 +55,18 @@ function SubmittedDetailPage() {
   const fetchEvidence = useServerFn(getClaimEvidence);
   const fetchReplay = useServerFn(getPolicyReplay);
   const fetchDocument = useServerFn(getClaimDocument);
+  const judgeEvidence = useServerFn(getJudgeEvidence);
+  const judgeReplay = useServerFn(getJudgeReplay);
+  const judgeDocument = useServerFn(getJudgeDocument);
   const [downloading, setDownloading] = useState<number | null>(null);
 
   const evidenceQuery = useQuery({
     queryKey: ["submitted-evidence", staffId, reference],
-    queryFn: () => (sample ? demoEvidence(sample) : fetchEvidence({ data: { reference } })),
-    enabled: Boolean(sample || staffId),
+    queryFn: () =>
+      sample
+        ? demoEvidence(sample)
+        : (staffId ? fetchEvidence : judgeEvidence)({ data: { reference } }),
+    refetchInterval: !sample && !staffId ? 5000 : false,
     gcTime: 0,
     retry: false,
   });
@@ -56,14 +75,16 @@ function SubmittedDetailPage() {
   const replayQuery = useQuery({
     queryKey: ["submitted-replay", staffId, reference, revision],
     gcTime: 0,
-    queryFn: () => (sample ? sample.replay : fetchReplay({ data: { reference, expected_revision: revision! } })),
+    queryFn: () =>
+      sample
+        ? sample.replay
+        : (staffId ? fetchReplay : judgeReplay)({
+            data: { reference, expected_revision: revision! },
+          }),
     enabled: typeof revision === "number",
     retry: false,
   });
 
-  if (!sample && !staffId) {
-    return <StaffGate error="FORBIDDEN: unknown demo reference" />;
-  }
   if (evidenceQuery.error) {
     return <StaffGate error={evidenceQuery.error} onRetry={() => evidenceQuery.refetch()} />;
   }
@@ -79,7 +100,9 @@ function SubmittedDetailPage() {
   const download = async (position: number, fallbackName?: string) => {
     setDownloading(position);
     try {
-      const doc = sample ? demoDocument(sample, position) : await fetchDocument({ data: { reference, position } });
+      const doc = sample
+        ? demoDocument(sample, position)
+        : await (staffId ? fetchDocument : judgeDocument)({ data: { reference, position } });
       const bytes = Uint8Array.from(atob(doc.content_base64), (c) => c.charCodeAt(0));
       const blob = new Blob([bytes], {
         type: sample ? "application/pdf" : "application/octet-stream",
@@ -111,7 +134,9 @@ function SubmittedDetailPage() {
         </Link>
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
           {sample && <p className="eyebrow w-full">Demo claim · {sample.title}</p>}
-          <h1 className="font-mono text-xl font-medium tabular-nums tracking-tight text-foreground">{reference}</h1>
+          <h1 className="font-mono text-xl font-medium tabular-nums tracking-tight text-foreground">
+            {reference}
+          </h1>
           {category?.revision !== undefined && (
             <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
               Revision {String(category.revision)}
@@ -159,8 +184,15 @@ function SubmittedDetailPage() {
                 {documents.map((doc, index) => {
                   const position = typeof doc.position === "number" ? doc.position : index;
                   return (
-                    <li key={position} className="flex items-center gap-3 rounded-sm border border-border px-3 py-2">
-                      <FileText size={14} strokeWidth={1.5} className="shrink-0 text-muted-foreground" />
+                    <li
+                      key={position}
+                      className="flex items-center gap-3 rounded-sm border border-border px-3 py-2"
+                    >
+                      <FileText
+                        size={14}
+                        strokeWidth={1.5}
+                        className="shrink-0 text-muted-foreground"
+                      />
                       <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                         {doc.name ?? `Document ${position + 1}`}
                       </span>
@@ -187,7 +219,9 @@ function SubmittedDetailPage() {
               <p className="eyebrow">Reviewer corrections</p>
             </div>
             {corrections.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">No reviewer corrections recorded.</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                No reviewer corrections recorded.
+              </p>
             ) : (
               <ul className="mt-3 ml-1 space-y-4 border-l border-border pl-4">
                 {corrections.map((correction, index) => (
@@ -204,9 +238,13 @@ function SubmittedDetailPage() {
                     <p className="font-mono text-xs tabular-nums text-foreground">
                       {String(correction.previous ?? "—")} → {String(correction.next ?? "—")}
                     </p>
-                    {correction.reason && <p className="text-sm text-muted-foreground">{String(correction.reason)}</p>}
+                    {correction.reason && (
+                      <p className="text-sm text-muted-foreground">{String(correction.reason)}</p>
+                    )}
                     {correction.reviewer && (
-                      <p className="text-xs text-muted-foreground">by {String(correction.reviewer)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        by {String(correction.reviewer)}
+                      </p>
                     )}
                   </li>
                 ))}
@@ -217,7 +255,9 @@ function SubmittedDetailPage() {
           <section className="rounded-lg border border-border bg-card p-5 lg:col-span-2">
             <p className="eyebrow">Policy v1 → v2 preview</p>
             {typeof revision !== "number" ? (
-              <p className="mt-3 text-sm text-muted-foreground">No revision on this claim — replay unavailable.</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                No revision on this claim — replay unavailable.
+              </p>
             ) : replayQuery.isPending ? (
               <p className="mt-3 text-sm text-muted-foreground">Replaying under v2…</p>
             ) : replayQuery.error ? (
@@ -231,7 +271,9 @@ function SubmittedDetailPage() {
                     <Field label="Rule" value={replay.recorded?.rule} />
                   </div>
                   {replay.recorded?.why && (
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{replay.recorded.why}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {replay.recorded.why}
+                    </p>
                   )}
                 </div>
                 <div className="rounded-sm border border-border p-4">
@@ -241,7 +283,9 @@ function SubmittedDetailPage() {
                     <Field label="Rule" value={replay.proposed?.rule} />
                   </div>
                   {replay.proposed?.why && (
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{replay.proposed.why}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {replay.proposed.why}
+                    </p>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 md:col-span-2">

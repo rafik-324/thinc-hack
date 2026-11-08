@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { demoRows, findDemoClaim, StaffGate, SubmittedStaff } from "@/components/staff-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { listSubmittedClaims, type InboxClaim } from "@/lib/staff-inbox.functions";
+import { listJudgeClaims, listSubmittedClaims, type InboxClaim } from "@/lib/staff-inbox.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/submitted")({
@@ -52,6 +52,8 @@ function SubmittedPage({ demo }: { demo: boolean }) {
   const navigate = useNavigate();
   const fetchInbox = useServerFn(listSubmittedClaims);
 
+  const fetchJudgeInbox = useServerFn(listJudgeClaims);
+
   const [claims, setClaims] = useState<InboxClaim[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -61,10 +63,13 @@ function SubmittedPage({ demo }: { demo: boolean }) {
 
   const loadPage = useCallback(
     async (cursor?: string) => {
-      if (demo) return { claims: demoRows, next_cursor: null };
+      if (demo) {
+        const page = await fetchJudgeInbox({ data: cursor ? { cursor } : {} });
+        return { ...page, claims: page.next_cursor ? page.claims : [...page.claims, ...demoRows] };
+      }
       return fetchInbox({ data: cursor ? { cursor } : {} });
     },
-    [demo, fetchInbox],
+    [demo, fetchInbox, fetchJudgeInbox],
   );
 
   const loadFirst = useCallback(() => {
@@ -113,12 +118,17 @@ function SubmittedPage({ demo }: { demo: boolean }) {
             <p className="eyebrow">{demo ? "Demo inbox" : "Submitted claims"}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {demo
-                ? "Two sample claims. Open a quote to compare V1 and V2."
+                ? "Open a demo claim to see its documents and compare V1 and V2."
                 : loading
                   ? "Loading inbox…"
                   : `${claims.length} claim${claims.length === 1 ? "" : "s"} loaded`}
             </p>
           </div>
+          {demo && (
+            <Button size="sm" variant="outline" onClick={loadFirst} disabled={loading}>
+              Refresh inbox
+            </Button>
+          )}
           {!demo && (
             <form
               className="flex items-center gap-2"
@@ -134,7 +144,12 @@ function SubmittedPage({ demo }: { demo: boolean }) {
                 aria-label="Receipt reference"
                 className="h-8 w-56 rounded-sm font-mono text-xs tabular-nums"
               />
-              <Button type="submit" size="sm" variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
+              <Button
+                type="submit"
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 rounded-sm text-xs"
+              >
                 <Search size={13} strokeWidth={1.5} />
                 Look up
               </Button>
@@ -166,16 +181,21 @@ function SubmittedPage({ demo }: { demo: boolean }) {
                     title={claim.reference}
                     className="min-w-0 flex-1 truncate font-mono text-sm tabular-nums text-foreground"
                   >
-                    {demo ? findDemoClaim(claim.reference)?.title : claim.reference}
+                    {demo
+                      ? (findDemoClaim(claim.reference)?.title ?? claim.reference)
+                      : claim.reference}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-                    {demo ? claim.reference : (claim.rule_id ?? "—")}
+                    {demo && findDemoClaim(claim.reference)
+                      ? claim.reference
+                      : (claim.rule_id ?? "—")}
                   </span>
                   {claim.recommendation && (
                     <span
                       className={cn(
                         "shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide",
-                        claim.effective_recommendation && claim.effective_recommendation !== claim.recommendation
+                        claim.effective_recommendation &&
+                          claim.effective_recommendation !== claim.recommendation
                           ? "text-muted-foreground line-through"
                           : "text-foreground",
                       )}
@@ -183,11 +203,12 @@ function SubmittedPage({ demo }: { demo: boolean }) {
                       {claim.recommendation}
                     </span>
                   )}
-                  {claim.effective_recommendation && claim.effective_recommendation !== claim.recommendation && (
-                    <span className="shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-foreground">
-                      {claim.effective_recommendation}
-                    </span>
-                  )}
+                  {claim.effective_recommendation &&
+                    claim.effective_recommendation !== claim.recommendation && (
+                      <span className="shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-foreground">
+                        {claim.effective_recommendation}
+                      </span>
+                    )}
                   <ArrowRight
                     size={14}
                     strokeWidth={1.5}

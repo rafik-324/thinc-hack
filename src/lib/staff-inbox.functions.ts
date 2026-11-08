@@ -51,6 +51,27 @@ async function staffPost(pathKey: UpstreamKey, body: Record<string, unknown>) {
   return response.json();
 }
 
+// The local judge room has its own database, routes, and session credential.
+async function judgePost(pathKey: UpstreamKey, body: Record<string, unknown>) {
+  const port = process.env["JUDGE_DEMO_PORT"];
+  const key = process.env["JUDGE_DEMO_KEY"];
+  if (!port && !key && pathKey === "inbox") return { claims: [], next_cursor: null };
+  if (!port && !key) throw new Error("FORBIDDEN: unknown demo reference");
+  if (!port || !/^[0-9]{1,5}$/.test(port) || Number(port) > 65535 || !key || key.length < 32) {
+    throw new Error("CONFIG: judge room is not configured");
+  }
+  const response = await fetch(`http://127.0.0.1:${port}/api/judge/${pathKey}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    redirect: "error",
+    cache: "no-store",
+    body: JSON.stringify({ ...body, reviewer_key: key }),
+  });
+  if (response.status === 404) throw new Error("FORBIDDEN: unknown demo reference");
+  if (!response.ok) throw new Error(`UPSTREAM: judge room request failed (${response.status})`);
+  return response.json();
+}
+
 const REFERENCE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$/;
 
 function validReference(value: unknown): string {
@@ -96,34 +117,47 @@ export interface InboxPage {
   next_cursor: string | null;
 }
 
+const readInboxInput = (input: { cursor?: string }) => ({
+  cursor: validCursor(input?.cursor),
+});
+
+async function readInbox(
+  post: typeof staffPost,
+  data: ReturnType<typeof readInboxInput>,
+): Promise<InboxPage> {
+  const result = (await post("inbox", data.cursor ? { cursor: data.cursor } : {})) as {
+    claims?: Array<{
+      reference: string;
+      submitted_at?: string;
+      category?: ReviewerEvidence["category"];
+    }>;
+    next_cursor?: string | null;
+  };
+  if (!Array.isArray(result?.claims)) throw new Error(ERR.upstream);
+  return {
+    claims: result.claims.map(({ reference, submitted_at, category }) => ({
+      reference,
+      submitted_at: submitted_at ?? null,
+      recommendation: category?.recommendation ?? null,
+      effective_recommendation: category?.effective_recommendation ?? null,
+      revision: category?.revision ?? null,
+      rule_id: category?.rule_id ?? null,
+    })),
+    next_cursor: typeof result?.next_cursor === "string" ? result.next_cursor : null,
+  };
+}
+
 export const listSubmittedClaims = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { cursor?: string }) => ({
-    cursor: validCursor(input?.cursor),
-  }))
-  .handler(async ({ data, context }): Promise<InboxPage> => {
+  .inputValidator(readInboxInput)
+  .handler(async ({ data, context }) => {
     requireStaff(context.claims);
-    const result = (await staffPost("inbox", data.cursor ? { cursor: data.cursor } : {})) as {
-      claims?: Array<{
-        reference: string;
-        submitted_at?: string;
-        category?: ReviewerEvidence["category"];
-      }>;
-      next_cursor?: string | null;
-    };
-    if (!Array.isArray(result?.claims)) throw new Error(ERR.upstream);
-    return {
-      claims: result.claims.map(({ reference, submitted_at, category }) => ({
-        reference,
-        submitted_at: submitted_at ?? null,
-        recommendation: category?.recommendation ?? null,
-        effective_recommendation: category?.effective_recommendation ?? null,
-        revision: category?.revision ?? null,
-        rule_id: category?.rule_id ?? null,
-      })),
-      next_cursor: typeof result?.next_cursor === "string" ? result.next_cursor : null,
-    };
+    return readInbox(staffPost, data);
   });
+
+export const listJudgeClaims = createServerFn({ method: "POST" })
+  .inputValidator(readInboxInput)
+  .handler(async ({ data }) => readInbox(judgePost, data));
 
 export interface ReviewerEvidence {
   reference: string;
@@ -151,70 +185,96 @@ export interface ReviewerEvidence {
   }>;
 }
 
+const readEvidenceInput = (input: { reference: string }) => ({
+  reference: validReference(input?.reference),
+});
+
+async function readEvidence(post: typeof staffPost, data: { reference: string }) {
+  const result = (await post("reviewer", { reference: data.reference })) as Omit<
+    ReviewerEvidence,
+    "corrections"
+  > & {
+    corrections?: Array<{
+      previous_recommendation?: string;
+      recommendation?: string;
+      reason?: string;
+      reviewer?: string;
+      created_at?: string;
+    }>;
+  };
+  const decision = result.evidence?.decision;
+  return {
+    reference: result.reference,
+    category: result.category,
+    evidence: {
+      decision: decision && {
+        primary_rule_id: decision.primary_rule_id,
+        policy_version: decision.policy_version,
+        recommendation: decision.recommendation,
+        audit: { detail: { employee: { why: decision.audit?.detail?.employee?.why } } },
+      },
+    },
+    documents: result.documents?.map(({ name, position }) => ({ name, position })),
+    corrections: result.corrections?.map((entry) => ({
+      previous: entry.previous_recommendation,
+      next: entry.recommendation,
+      reason: entry.reason,
+      reviewer: entry.reviewer,
+      at: entry.created_at,
+    })),
+  };
+}
+
 export const getClaimEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { reference: string }) => ({
-    reference: validReference(input?.reference),
-  }))
+  .inputValidator(readEvidenceInput)
   .handler(async ({ data, context }) => {
     requireStaff(context.claims);
-    const result = (await staffPost("reviewer", { reference: data.reference })) as Omit<
-      ReviewerEvidence,
-      "corrections"
-    > & {
-      corrections?: Array<{
-        previous_recommendation?: string;
-        recommendation?: string;
-        reason?: string;
-        reviewer?: string;
-        created_at?: string;
-      }>;
-    };
-    const decision = result.evidence?.decision;
-    return {
-      reference: result.reference,
-      category: result.category,
-      evidence: {
-        decision: decision && {
-          primary_rule_id: decision.primary_rule_id,
-          policy_version: decision.policy_version,
-          recommendation: decision.recommendation,
-          audit: { detail: { employee: { why: decision.audit?.detail?.employee?.why } } },
-        },
-      },
-      documents: result.documents?.map(({ name, position }) => ({ name, position })),
-      corrections: result.corrections?.map((entry) => ({
-        previous: entry.previous_recommendation,
-        next: entry.recommendation,
-        reason: entry.reason,
-        reviewer: entry.reviewer,
-        at: entry.created_at,
-      })),
-    };
+    return readEvidence(staffPost, data);
   });
+
+export const getJudgeEvidence = createServerFn({ method: "POST" })
+  .inputValidator(readEvidenceInput)
+  .handler(async ({ data }) => readEvidence(judgePost, data));
 
 export interface ClaimDocument {
   name: string;
   content_base64: string;
 }
 
+const readDocumentInput = (input: { reference: string; position: number }) => ({
+  reference: validReference(input?.reference),
+  position: validPosition(input?.position),
+});
+
+async function readDocument(
+  post: typeof staffPost,
+  data: { reference: string; position: number },
+): Promise<ClaimDocument> {
+  const result = (await post("document", {
+    reference: data.reference,
+    position: data.position,
+  })) as { name?: string; content_base64?: string };
+  if (typeof result?.content_base64 !== "string") {
+    throw new Error(`${ERR.upstream} (document payload)`);
+  }
+  return {
+    name: result.name ?? `document-${data.position}`,
+    content_base64: result.content_base64,
+  };
+}
+
 export const getClaimDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { reference: string; position: number }) => ({
-    reference: validReference(input?.reference),
-    position: validPosition(input?.position),
-  }))
-  .handler(async ({ data, context }): Promise<ClaimDocument> => {
+  .inputValidator(readDocumentInput)
+  .handler(async ({ data, context }) => {
     requireStaff(context.claims);
-    const result = (await staffPost("document", {
-      reference: data.reference,
-      position: data.position,
-    })) as { name?: string; content_base64?: string };
-    if (typeof result?.content_base64 !== "string") {
-      throw new Error(`${ERR.upstream} (document payload)`);
-    }
-    return { name: result.name ?? `document-${data.position}`, content_base64: result.content_base64 };
+    return readDocument(staffPost, data);
   });
+
+export const getJudgeDocument = createServerFn({ method: "POST" })
+  .inputValidator(readDocumentInput)
+  .handler(async ({ data }) => readDocument(judgePost, data));
 
 export interface PolicyReplayResult {
   reference: string;
@@ -226,17 +286,30 @@ export interface PolicyReplayResult {
   closed_retained?: boolean;
 }
 
+const readReplayInput = (input: { reference: string; expected_revision: number }) => ({
+  reference: validReference(input?.reference),
+  expected_revision: validRevision(input?.expected_revision),
+});
+
+async function readReplay(
+  post: typeof staffPost,
+  data: { reference: string; expected_revision: number },
+): Promise<PolicyReplayResult> {
+  return (await post("replay", {
+    reference: data.reference,
+    expected_revision: data.expected_revision,
+    target_version: "v2",
+  })) as PolicyReplayResult;
+}
+
 export const getPolicyReplay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { reference: string; expected_revision: number }) => ({
-    reference: validReference(input?.reference),
-    expected_revision: validRevision(input?.expected_revision),
-  }))
-  .handler(async ({ data, context }): Promise<PolicyReplayResult> => {
+  .inputValidator(readReplayInput)
+  .handler(async ({ data, context }) => {
     requireStaff(context.claims);
-    return (await staffPost("replay", {
-      reference: data.reference,
-      expected_revision: data.expected_revision,
-      target_version: "v2",
-    })) as PolicyReplayResult;
+    return readReplay(staffPost, data);
   });
+
+export const getJudgeReplay = createServerFn({ method: "POST" })
+  .inputValidator(readReplayInput)
+  .handler(async ({ data }) => readReplay(judgePost, data));
