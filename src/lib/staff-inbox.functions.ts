@@ -23,7 +23,7 @@ function requireStaff(claims: unknown): void {
   const appMetadata = (claims as { app_metadata?: Record<string, unknown> } | null)
     ?.app_metadata;
   // Only verified app_metadata counts — user-editable metadata is never trusted.
-  if (appMetadata?.staff !== true) {
+  if (appMetadata?.["staff"] !== true) {
     throw new Error(ERR.forbidden);
   }
 }
@@ -92,7 +92,6 @@ export interface InboxClaim {
   revision?: number;
   rule_id?: string;
   submitted_at?: string;
-  [key: string]: unknown;
 }
 
 export interface InboxPage {
@@ -124,7 +123,6 @@ export interface ReviewerEvidence {
     effective_recommendation?: string;
     revision?: number;
     rule_id?: string;
-    [key: string]: unknown;
   };
   evidence?: {
     decision?: {
@@ -132,20 +130,16 @@ export interface ReviewerEvidence {
       policy_version?: string;
       recommendation?: string;
       audit?: { detail?: { employee?: { why?: string } } };
-      [key: string]: unknown;
     };
-    [key: string]: unknown;
   };
-  documents?: Array<{ name?: string; position?: number; [key: string]: unknown }>;
+  documents?: Array<{ name?: string; position?: number }>;
   corrections?: Array<{
     previous?: string;
     next?: string;
     reason?: string;
     reviewer?: string;
     at?: string;
-    [key: string]: unknown;
   }>;
-  [key: string]: unknown;
 }
 
 export const getClaimEvidence = createServerFn({ method: "POST" })
@@ -189,7 +183,6 @@ export interface PolicyReplayResult {
   impacted_rules?: string[];
   needs_recheck?: boolean;
   closed_retained?: boolean;
-  [key: string]: unknown;
 }
 
 export const getPolicyReplay = createServerFn({ method: "POST" })
