@@ -34,26 +34,8 @@ export function usePolicy(): PolicyState {
   return ctx;
 }
 
-const SEED_OVERRIDES: Override[] = [
-  {
-    id: "ov-seed-1",
-    claimId: "CLM-1006",
-    previousDecision: "reject",
-    newDecision: "standard_review",
-    reason: "Customer proved the second submission was a correction, not a duplicate.",
-    reviewer: "J. Anders",
-    at: "2026-11-05T14:32:00Z",
-  },
-  {
-    id: "ov-seed-2",
-    claimId: "CLM-1012",
-    previousDecision: "standard_review",
-    newDecision: "fast_track",
-    reason: "Long-standing customer, damage fully documented with photos.",
-    reviewer: "M. Roth",
-    at: "2026-11-06T09:15:00Z",
-  },
-];
+// Overrides start empty: every entry in the audit trail comes from a correction made in this session.
+const SEED_OVERRIDES: Override[] = [];
 
 export function PolicyProvider({ children }: { children: ReactNode }) {
   // v1 is the baseline; the top bar switches to the newest uploaded version once policies load.

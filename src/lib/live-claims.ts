@@ -8,6 +8,7 @@ import {
   type Claim,
   type Decision,
 } from "@/lib/policy-data";
+import { decisiveFact } from "@/lib/labels";
 import { usePolicy } from "@/lib/policy-store";
 
 const LIVE_DECISIONS = new Set<string>(LIVE_DECISION_ORDER);
@@ -30,18 +31,20 @@ async function fetchLiveClaims(version: string): Promise<Claim[]> {
     const v2 = version === "v1" ? undefined : decisions.find((d) => d.policy_version === version);
     const fields = (row.source_fields ?? {}) as Record<string, unknown>;
     const amount = Number(fields["quote_eur"] ?? 0);
-    const facts = (v1?.supporting_facts ?? {}) as Record<string, unknown>;
-    const factText = Object.entries(facts)
-      .map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`)
-      .join(" · ");
+    // Facts and explanation follow the selected version (closed claims fall back to v1).
+    const current = v2 ?? v1;
+    const facts = (current?.supporting_facts ?? {}) as Record<string, unknown>;
+    const factText = decisiveFact(facts, current?.recommendation === "routine_processing");
     const clause = v1?.policy_clause ?? "";
     return {
       id: row.case_id,
-      claimant: String(fields["claim_type"] ?? "—").replace(/_/g, " "),
+      claimant: String(fields["claim_type"] ?? "—")
+        .replace(/_/g, " ")
+        .replace(/^\w/, (c) => c.toUpperCase()),
       rule: v1?.matched_rule ?? "—",
       ruleV2: v2?.matched_rule ?? undefined,
       decisiveFact: factText || row.claim_summary,
-      explanation: v1?.explanation ?? row.claim_summary,
+      explanation: current?.explanation ?? row.claim_summary,
       decisionV1: toDecision(v1?.recommendation),
       decisionV2: toDecision((v2 ?? v1)?.recommendation),
       status: row.case_status === "closed" ? "closed" : "open",

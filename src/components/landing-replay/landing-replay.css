@@ -100,8 +100,9 @@ html.pr-no-cursor, html.pr-no-cursor * { cursor: none !important; }
   background: var(--pr-fg); color: oklch(0.13 0 0); cursor: pointer; overflow: hidden; transition: background .15s, transform .09s; }
 .pr-btn:hover { background: oklch(0.9 0 0); }
 .pr-btn:active { transform: scale(.98); }
-.pr-btn--ghost { background: transparent; color: var(--pr-fg); border-color: var(--pr-line-2); }
-.pr-btn--ghost:hover { background: rgba(253,252,252,.08); }
+/* Solid fill: the hero colonnade must never show through the label. */
+.pr-btn--ghost { background: var(--pr-bg); color: var(--pr-fg); border-color: var(--pr-line-2); }
+.pr-btn--ghost:hover { background: color-mix(in oklab, var(--pr-bg) 92%, var(--pr-fg)); }
 .pr-btn__arrow { position: relative; width: 1em; height: 1.2em; overflow: hidden; display: inline-block; }
 .pr-btn__arrow span { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .48s var(--pr-ease); }
 .pr-btn__arrow span + span { transform: translateX(-130%); }

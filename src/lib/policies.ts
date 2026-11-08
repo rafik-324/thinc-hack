@@ -161,6 +161,9 @@ export interface PolicyRun {
     rule_v2: string;
     rule_v1_name?: string;
     rule_v2_name?: string;
+    recommendation_v1?: string;
+    recommendation_v2?: string;
+    needs_recheck?: boolean;
   }[];
 }
 

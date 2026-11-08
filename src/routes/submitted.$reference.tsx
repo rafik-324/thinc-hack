@@ -21,6 +21,8 @@ import {
   getJudgeDocument,
   getJudgeReplay,
 } from "@/lib/staff-inbox.functions";
+import { DecisionBadge } from "@/components/decision-badge";
+import { asDecision, ruleLabel } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/submitted/$reference")({
@@ -38,12 +40,26 @@ export const Route = createFileRoute("/submitted/$reference")({
 });
 
 function Field({ label, value, mono = true }: { label: string; value?: unknown; mono?: boolean }) {
+  const empty = value === undefined || value === null || value === "";
+  const decision = empty ? null : asDecision(value);
+  // Engine codes (ROUTINE_ALL_CHECKS_PASSED, HR_QUOTE_LIMIT) read as words; the code stays as tooltip.
+  const code = !empty && /^[A-Z][A-Z0-9_]+$/.test(String(value));
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-border/60 py-2 last:border-0">
+    <div className="flex items-center justify-between gap-4 border-b border-border/60 py-2 last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className={cn("text-right text-sm text-foreground", mono && "font-mono tabular-nums")}>
-        {value === undefined || value === null || value === "" ? "—" : String(value)}
-      </span>
+      {decision ? (
+        <DecisionBadge decision={decision} />
+      ) : (
+        <span
+          title={code ? String(value) : undefined}
+          className={cn(
+            "text-right text-sm text-foreground",
+            mono && !code && "font-mono tabular-nums",
+          )}
+        >
+          {empty ? "—" : code ? ruleLabel(value) : String(value)}
+        </span>
+      )}
     </div>
   );
 }
@@ -151,21 +167,29 @@ function SubmittedDetailPage() {
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          <section className="rounded-lg border border-border bg-card p-5">
-            <p className="eyebrow">Category</p>
-            <div className="mt-3">
-              <Field label="Recommendation" value={category?.recommendation} />
-              <Field label="Effective recommendation" value={category?.effective_recommendation} />
-              <Field label="Rule" value={category?.rule_id} />
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-border bg-card p-5">
-            <p className="eyebrow">Recorded engine recommendation</p>
-            <div className="mt-3">
-              <Field label="Recommendation" value={decision?.recommendation} />
-              <Field label="Primary rule" value={decision?.primary_rule_id} />
-              <Field label="Policy version" value={decision?.policy_version} />
+          <section className="rounded-lg border border-border bg-card p-5 lg:col-span-2">
+            <p className="eyebrow">Engine recommendation</p>
+            <div className="mt-3 grid gap-x-8 md:grid-cols-2">
+              <div>
+                <Field
+                  label="Recommendation"
+                  value={decision?.recommendation ?? category?.recommendation}
+                />
+                {category?.effective_recommendation &&
+                  category.effective_recommendation !== category.recommendation && (
+                    <Field
+                      label="After reviewer correction"
+                      value={category.effective_recommendation}
+                    />
+                  )}
+              </div>
+              <div>
+                <Field
+                  label="Primary rule"
+                  value={decision?.primary_rule_id ?? category?.rule_id}
+                />
+                <Field label="Policy version" value={decision?.policy_version} />
+              </div>
             </div>
             {employeeWhy && (
               <div className="mt-4 rounded-sm border border-border p-3">
@@ -291,7 +315,7 @@ function SubmittedDetailPage() {
                 <div className="flex flex-wrap items-center gap-2 md:col-span-2">
                   {Array.isArray(replay.impacted_rules) && replay.impacted_rules.length > 0 && (
                     <span className="rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                      Impacted rules: {replay.impacted_rules.join(", ")}
+                      Impacted rules: {replay.impacted_rules.map(ruleLabel).join(", ")}
                     </span>
                   )}
                   {replay.needs_recheck && (

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { useClaimSource } from "@/lib/live-claims";
 import { DECISION_LABELS, isChanged, type Decision } from "@/lib/policy-data";
+import { formatEur } from "@/lib/labels";
 import { usePolicy } from "@/lib/policy-store";
 import { cn } from "@/lib/utils";
 
@@ -157,8 +158,8 @@ function ClaimsQueue() {
             />
             <SmallKpi
               label="Open claim volume"
-              value={`€${Math.round(openVolume).toLocaleString("de-DE")}`}
-              chip={`Ø €${Math.round(openVolume / Math.max(1, openCount)).toLocaleString("de-DE")}`}
+              value={formatEur(openVolume)}
+              chip={`Ø ${formatEur(openVolume / Math.max(1, openCount))}`}
             />
           </div>
 
@@ -193,8 +194,8 @@ function ClaimsQueue() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-card hover:bg-card">
-                    <TableHead className="eyebrow h-10">Claim ID</TableHead>
-                    <TableHead className="eyebrow h-10">Claimant</TableHead>
+                    <TableHead className="eyebrow h-10 whitespace-nowrap">Claim ID</TableHead>
+                    <TableHead className="eyebrow hidden h-10 sm:table-cell">Claim type</TableHead>
                     <TableHead className="eyebrow h-10">Decision</TableHead>
                     <TableHead className="eyebrow h-10">Rule</TableHead>
                     <TableHead className="eyebrow h-10 w-1/3">Decisive fact</TableHead>
@@ -226,10 +227,12 @@ function ClaimsQueue() {
                           }
                         }}
                       >
-                        <TableCell className="font-mono tabular-nums text-sm text-foreground">
+                        <TableCell className="whitespace-nowrap font-mono tabular-nums text-sm text-foreground">
                           {claim.id}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
+                        <TableCell className="hidden text-muted-foreground sm:table-cell">
+                          {claim.claimant}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <DecisionBadge decision={effectiveDecision(claim, mode)} />
@@ -245,7 +248,7 @@ function ClaimsQueue() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="rounded-sm font-mono tabular-nums">
-                            {claim.rule}
+                            {claim.ruleV2 ?? claim.rule}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-md">

@@ -6,7 +6,6 @@ import {
   CircleAlert,
   CircleHelp,
   Lock,
-  XCircle,
 } from "lucide-react";
 import {
   Bar,
@@ -48,6 +47,34 @@ import { toast } from "sonner";
 import { useClaimSource } from "@/lib/live-claims";
 import { cn } from "@/lib/utils";
 
+/** Rule names are full sentences: wrap them onto up to three centred lines instead of overlapping. */
+function WrappedTick({
+  x = 0,
+  y = 0,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+}) {
+  const lines: string[] = [];
+  for (const word of String(payload?.value ?? "").split(" ")) {
+    const last = lines[lines.length - 1];
+    if (last && (last + " " + word).length <= 24) lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+  }
+  if (lines.length > 3) lines.splice(2, lines.length - 2, `${lines[2]}…`);
+  return (
+    <text x={x} y={y + 12} textAnchor="middle" fill="var(--color-muted-foreground)" fontSize={11}>
+      {lines.map((line, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : 13}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
 export const Route = createFileRoute("/update")({
   head: () => ({
     meta: [
@@ -69,14 +96,6 @@ export const Route = createFileRoute("/update")({
   }),
   component: PolicyUpdate,
 });
-
-const HEAT_SHADES = [
-  "bg-foreground/[0.03]",
-  "bg-foreground/[0.06]",
-  "bg-foreground/[0.10]",
-  "bg-foreground/[0.15]",
-  "bg-foreground/[0.21]",
-];
 
 function PolicyUpdate() {
   const { overrides, mode, dataSource } = usePolicy();
@@ -138,6 +157,8 @@ function PolicyUpdate() {
     hint?: string;
     /** Shown only while hovering the card. */
     prevValue?: string;
+    /** Small line under the value so the number explains itself. */
+    sub?: string | undefined;
   };
 
   const fmtRate = (r: number | null | undefined) => (r == null ? "—" : `${r.toFixed(1)}%`);
@@ -162,15 +183,25 @@ function PolicyUpdate() {
       label: "Error rate",
       value: fmtRate(latest?.errorRate),
       ...(v2 && v1 ? { prevValue: fmtRate(v1.errorRate) } : {}),
-      valueClass: "text-decision-fast",
+      valueClass: latest?.errorRate == null ? "text-muted-foreground" : "text-decision-fast",
+      sub:
+        latest?.errorRate == null
+          ? `No labelled cases for ${latest?.version ?? mode}`
+          : `vs. labelled cases · ${latest.version}`,
       hint: latest
-        ? `${latest.wrong} of ${latest.validated} validated decisions (policy ${latest.version}) differ from the expected outcome`
+        ? latest.errorRate == null
+          ? `Error rate is measured against labelled expected outcomes, which exist only for v1. ${latest.version} cannot be scored yet.`
+          : `${latest.wrong} of ${latest.validated} validated decisions (policy ${latest.version}) differ from the expected outcome`
         : "Loading…",
     },
     {
       label: "Savings",
       value: savings == null ? "—" : `€${savings.toLocaleString("en-US")}`,
       valueClass: "text-decision-fast",
+      sub:
+        latest && impact
+          ? `${latest.automated} automated × €${impact.perClaim} vs. manual review`
+          : undefined,
       hint:
         latest && impact
           ? `${latest.automated} automated decisions × €${impact.perClaim} saved per claim`
@@ -178,29 +209,48 @@ function PolicyUpdate() {
     },
   ];
 
+  // Direction of every change, straight from the latest engine run (no labelled v2 outcomes exist).
+  const SEVERITY: Record<string, number> = {
+    routine_processing: 0,
+    request_information: 1,
+    human_review: 2,
+  };
+  const runList = run?.rows ?? [];
+  const moved = runList.filter(
+    (r) =>
+      r.recommendation_v1 && r.recommendation_v2 && r.recommendation_v1 !== r.recommendation_v2,
+  );
+  const severity = (d?: string) => SEVERITY[d ?? ""] ?? 0;
   const correctness = [
     {
-      label: "Correctly changed",
-      count: IMPACT_STATS.correctness.correctlyChanged,
+      label: "Stricter now",
+      hint: "Decision moved towards human review",
+      count: moved.filter((r) => severity(r.recommendation_v2) > severity(r.recommendation_v1))
+        .length,
+      icon: CircleAlert,
+      className: "text-decision-human",
+    },
+    {
+      label: "More lenient now",
+      hint: "Decision moved towards routine processing",
+      count: moved.filter((r) => severity(r.recommendation_v2) < severity(r.recommendation_v1))
+        .length,
       icon: CheckCircle2,
       className: "text-decision-fast",
     },
     {
-      label: "Wrongly changed",
-      count: IMPACT_STATS.correctness.wronglyChanged,
-      icon: XCircle,
-      className: "text-decision-reject",
-    },
-    {
-      label: "Missing change",
-      count: IMPACT_STATS.correctness.missingChange,
-      icon: CircleAlert,
-      className: "text-decision-specialist",
-    },
-    {
-      label: "Unexpected change",
-      count: IMPACT_STATS.correctness.unexpectedChange,
+      label: "Same decision, recheck",
+      hint: "An amended rule touches the claim, but the outcome stays",
+      count: runList.filter((r) => r.needs_recheck && r.recommendation_v1 === r.recommendation_v2)
+        .length,
       icon: CircleHelp,
+      className: "text-muted-foreground",
+    },
+    {
+      label: "Closed, kept as is",
+      hint: "Closed claims keep their historical decision",
+      count: run?.closed_retained ?? 0,
+      icon: Lock,
       className: "text-muted-foreground",
     },
   ];
@@ -264,6 +314,9 @@ function PolicyUpdate() {
                   kpi.value
                 )}
               </p>
+              {kpi.sub && (
+                <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{kpi.sub}</p>
+              )}
             </div>
           ))}
         </CardContent>
@@ -336,10 +389,10 @@ function PolicyUpdate() {
                                   className={cn(
                                     "flex h-12 items-center justify-center rounded-md text-sm font-mono tabular-nums font-medium",
                                     offDiagonal
-                                      ? "bg-foreground/[0.04] ring-1 ring-inset ring-foreground/15"
-                                      : (HEAT_SHADES[Math.min(count, HEAT_SHADES.length - 1)] ??
-                                          HEAT_SHADES[0]),
-                                    count > 0 ? "text-foreground" : "text-muted-foreground",
+                                      ? "bg-contrast/20 text-foreground ring-1 ring-inset ring-contrast/60"
+                                      : row === col && count > 0
+                                        ? "bg-foreground/[0.06] text-muted-foreground"
+                                        : "bg-foreground/[0.02] text-muted-foreground/60",
                                   )}
                                 >
                                   {count}
@@ -353,7 +406,8 @@ function PolicyUpdate() {
                   </table>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Highlighted cells off the diagonal are claims whose decision changes under {mode}.
+                  Highlighted cells are claims whose decision changes under {mode}; the diagonal
+                  keeps its decision.
                 </p>
               </CardContent>
             </Card>
@@ -393,7 +447,9 @@ function PolicyUpdate() {
                       />
                       <XAxis
                         dataKey="rule"
-                        tick={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
+                        interval={0}
+                        height={48}
+                        tick={<WrappedTick />}
                         axisLine={{ stroke: "var(--color-border)" }}
                         tickLine={false}
                       />
@@ -478,7 +534,7 @@ function PolicyUpdate() {
                           >
                             {ruleName(claim)}
                           </span>
-                          <span className="block max-w-xs text-xs text-muted-foreground">
+                          <span className="mt-0.5 block max-w-xs text-xs text-foreground/70">
                             was: {ruleNameBefore(claim)}
                           </span>
                         </TableCell>
@@ -505,10 +561,16 @@ function PolicyUpdate() {
           </Collapsible>
 
           <div>
-            <h2 className="text-lg font-medium tracking-normal text-foreground">Is it correct?</h2>
+            <h2 className="text-lg font-medium tracking-normal text-foreground">
+              Direction of change
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              From the latest engine run of policy {mode}. There are no labelled outcomes for {mode}
+              , so this shows what changed, not an accuracy score.
+            </p>
             <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
               {correctness.map((item) => (
-                <Card key={item.label}>
+                <Card key={item.label} title={item.hint}>
                   <CardContent className="flex items-start gap-3 pt-6">
                     <item.icon className={cn("mt-0.5 h-5 w-5", item.className)} />
                     <div>
@@ -609,7 +671,8 @@ function PolicyUpdate() {
             </ul>
           )}
           <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3 w-3" /> Overrides are kept in memory for this demo session only.
+            <Lock className="h-3 w-3" /> Corrections made in the claim card appear here for this
+            session.
           </p>
         </CardContent>
       </Card>

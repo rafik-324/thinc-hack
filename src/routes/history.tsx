@@ -71,8 +71,8 @@ function HistoryPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-card hover:bg-card">
-                <TableHead className="eyebrow h-10">Claim ID</TableHead>
-                <TableHead className="eyebrow h-10">Claimant</TableHead>
+                <TableHead className="eyebrow h-10 whitespace-nowrap">Claim ID</TableHead>
+                <TableHead className="eyebrow hidden h-10 sm:table-cell">Claim type</TableHead>
                 <TableHead className="eyebrow h-10">Decision</TableHead>
                 <TableHead className="eyebrow h-10">Rule</TableHead>
                 <TableHead className="eyebrow h-10 w-1/3">Decisive fact</TableHead>
@@ -97,15 +97,17 @@ function HistoryPage() {
                     }
                   }}
                 >
-                  <TableCell className="font-mono tabular-nums text-sm text-foreground">
+                  <TableCell className="whitespace-nowrap font-mono tabular-nums text-sm text-foreground">
                     <span className="flex items-center gap-2">
                       <Lock aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
                       {claim.id}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{claim.claimant}</TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {claim.claimant}
+                  </TableCell>
                   <TableCell>
-                    <DecisionBadge decision={effectiveDecision(claim, mode)} muted />
+                    <DecisionBadge decision={effectiveDecision(claim, mode)} />
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="rounded-sm font-mono tabular-nums">

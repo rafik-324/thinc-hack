@@ -44,7 +44,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
 
   const saveOverride = () => {
     if (!reason.trim() || !reviewer.trim()) {
-      toast.error("Bitte Grund und Prüfer:in angeben.");
+      toast.error("Please enter a reason and the reviewer.");
       return;
     }
     addOverride({
@@ -57,7 +57,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
     setDialogOpen(false);
     setReason("");
     setReviewer("");
-    toast.success(`Entscheidung für ${claim.id} korrigiert.`);
+    toast.success(`Decision for ${claim.id} corrected.`);
   };
 
   return (
@@ -180,8 +180,20 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="eyebrow">Decision under policy {mode}</p>
               <div className="mt-2">
-                <DecisionBadge decision={currentDecision} size="lg" muted={closed} />
+                <DecisionBadge decision={currentDecision} size="lg" />
               </div>
+              {changed && !closed && mode !== "v1" && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                  Changed by policy {mode} · was
+                  <DecisionBadge decision={claim.decisionV1} />
+                  under v1
+                </div>
+              )}
+              {claim.explanation && (
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {claim.explanation}
+                </p>
+              )}
             </div>
 
             {claimOverrides.length > 0 && (
@@ -198,7 +210,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
                         {new Date(o.at).toLocaleString("en-GB")}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <DecisionBadge decision={o.previousDecision} muted={closed} />
+                        <DecisionBadge decision={o.previousDecision} />
                         <ArrowRight
                           aria-hidden="true"
                           className={cn(
@@ -207,7 +219,7 @@ export function ClaimDetailPanel({ claim }: { claim: Claim }) {
                           )}
                           strokeWidth={1.5}
                         />
-                        <DecisionBadge decision={o.newDecision} muted={closed} />
+                        <DecisionBadge decision={o.newDecision} />
                       </div>
                       <p className="text-sm text-muted-foreground">{o.reason}</p>
                       <p className="text-xs text-muted-foreground">by {o.reviewer}</p>

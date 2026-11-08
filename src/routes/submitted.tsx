@@ -8,6 +8,8 @@ import { demoRows, findDemoClaim, StaffGate, SubmittedStaff } from "@/components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listJudgeClaims, listSubmittedClaims, type InboxClaim } from "@/lib/staff-inbox.functions";
+import { DecisionBadge } from "@/components/decision-badge";
+import { asDecision, ruleLabel } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/submitted")({
@@ -177,38 +179,36 @@ function SubmittedPage({ demo }: { demo: boolean }) {
                   params={{ reference: claim.reference }}
                   className="group flex items-center gap-4 px-5 py-3 transition-colors hover:bg-accent/40"
                 >
-                  <span
-                    title={claim.reference}
-                    className="min-w-0 flex-1 truncate font-mono text-sm tabular-nums text-foreground"
-                  >
-                    {demo
-                      ? (findDemoClaim(claim.reference)?.title ?? claim.reference)
-                      : claim.reference}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-                    {demo && findDemoClaim(claim.reference)
-                      ? claim.reference
-                      : (claim.rule_id ?? "—")}
-                  </span>
-                  {claim.recommendation && (
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide",
-                        claim.effective_recommendation &&
-                          claim.effective_recommendation !== claim.recommendation
-                          ? "text-muted-foreground line-through"
-                          : "text-foreground",
-                      )}
-                    >
-                      {claim.recommendation}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-mono text-sm tabular-nums text-foreground">
+                      {demo
+                        ? (findDemoClaim(claim.reference)?.title ?? claim.reference)
+                        : claim.reference}
                     </span>
-                  )}
-                  {claim.effective_recommendation &&
-                    claim.effective_recommendation !== claim.recommendation && (
-                      <span className="shrink-0 rounded-sm border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-foreground">
-                        {claim.effective_recommendation}
-                      </span>
+                    <span
+                      title={claim.reference}
+                      className="mt-0.5 block truncate font-mono text-[11px] tabular-nums text-muted-foreground"
+                    >
+                      {demo && findDemoClaim(claim.reference)
+                        ? claim.reference
+                        : ruleLabel(claim.rule_id)}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                    {claim.recommendation && (
+                      <RecommendationBadge
+                        value={claim.recommendation}
+                        struck={
+                          !!claim.effective_recommendation &&
+                          claim.effective_recommendation !== claim.recommendation
+                        }
+                      />
                     )}
+                    {claim.effective_recommendation &&
+                      claim.effective_recommendation !== claim.recommendation && (
+                        <RecommendationBadge value={claim.effective_recommendation} />
+                      )}
+                  </span>
                   <ArrowRight
                     size={14}
                     strokeWidth={1.5}
@@ -235,5 +235,20 @@ function SubmittedPage({ demo }: { demo: boolean }) {
         )}
       </div>
     </div>
+  );
+}
+
+/** Engine recommendation as the same coloured badge the rest of the app uses. */
+function RecommendationBadge({ value, struck = false }: { value: string; struck?: boolean }) {
+  const decision = asDecision(value);
+  if (!decision) {
+    return (
+      <span className="rounded-sm border border-border px-2 py-0.5 text-xs text-foreground">
+        {value}
+      </span>
+    );
+  }
+  return (
+    <DecisionBadge decision={decision} muted={struck} className={cn(struck && "line-through")} />
   );
 }

@@ -74,8 +74,7 @@ export function PolicyUploadBar() {
           setEdited(null);
           if (fileRef.current) fileRef.current.value = "";
         },
-        onError: (e) =>
-          toast.error("Upload fehlgeschlagen", { description: String((e as Error).message) }),
+        onError: (e) => toast.error("Upload failed", { description: String((e as Error).message) }),
       },
     );
   };
@@ -183,7 +182,13 @@ export function PolicyUploadBar() {
                   onChange={(e) => setVersion(e.target.value)}
                   className="h-7 font-mono text-xs"
                 />
-                <Button size="sm" className="h-7 text-xs" disabled={!canSubmit} onClick={submit}>
+                <Button
+                  size="sm"
+                  className="h-7 text-xs disabled:border disabled:border-border disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-100"
+                  disabled={!canSubmit}
+                  onClick={submit}
+                  title={file ? undefined : "Choose a policy file first"}
+                >
                   {upload.isPending
                     ? "Uploading…"
                     : applyPolicy.isPending
@@ -191,6 +196,11 @@ export function PolicyUploadBar() {
                       : "Upload & apply"}
                 </Button>
               </div>
+              {!file && !result && !applyPolicy.isPending && !applyPolicy.isError && (
+                <span className="text-[11px] text-muted-foreground">
+                  Choose a policy file to enable upload.
+                </span>
+              )}
               {taken && (
                 <span className="text-[11px] font-medium text-decision-reject">
                   This version already exists.
@@ -208,7 +218,7 @@ export function PolicyUploadBar() {
               )}
               {result && (
                 <span
-                  className="truncate text-[11px] text-muted-foreground"
+                  className="text-[11px] leading-snug text-muted-foreground"
                   title={[
                     result.summary,
                     ...result.citations.map((c) => `${c.target}: ${c.new_quote}`),

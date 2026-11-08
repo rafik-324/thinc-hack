@@ -927,9 +927,9 @@ export function LandingReplay() {
           <a href="#impact">Impact</a>
         </nav>
         <div className="pr-nav__hud pr-eyebrow">
-          <span className="pr-rec">
+          <span className="pr-rec" title="Replay timecode: runs faster while the claims replay">
             <i />
-            Rec
+            Replay
           </span>
           <Timecode speed={mode === "rewind" ? -6 : mode === "play" ? 2 : 1} className="pr-tc" />
           <Link to="/queue" className="pr-nav__cta">
