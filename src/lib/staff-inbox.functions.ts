@@ -84,11 +84,11 @@ function validRevision(value: unknown): number {
 
 export interface InboxClaim {
   reference: string;
-  recommendation?: string;
-  effective_recommendation?: string;
-  revision?: number;
-  rule_id?: string;
-  submitted_at?: string;
+  recommendation: string | null;
+  effective_recommendation: string | null;
+  revision: number | null;
+  rule_id: string | null;
+  submitted_at: string | null;
 }
 
 export interface InboxPage {
@@ -115,11 +115,11 @@ export const listSubmittedClaims = createServerFn({ method: "POST" })
     return {
       claims: result.claims.map(({ reference, submitted_at, category }) => ({
         reference,
-        submitted_at,
-        recommendation: category?.recommendation,
-        effective_recommendation: category?.effective_recommendation,
-        revision: category?.revision,
-        rule_id: category?.rule_id,
+        submitted_at: submitted_at ?? null,
+        recommendation: category?.recommendation ?? null,
+        effective_recommendation: category?.effective_recommendation ?? null,
+        revision: category?.revision ?? null,
+        rule_id: category?.rule_id ?? null,
       })),
       next_cursor: typeof result?.next_cursor === "string" ? result.next_cursor : null,
     };
@@ -156,7 +156,7 @@ export const getClaimEvidence = createServerFn({ method: "POST" })
   .inputValidator((input: { reference: string }) => ({
     reference: validReference(input?.reference),
   }))
-  .handler(async ({ data, context }): Promise<ReviewerEvidence> => {
+  .handler(async ({ data, context }) => {
     requireStaff(context.claims);
     const result = (await staffPost("reviewer", { reference: data.reference })) as Omit<
       ReviewerEvidence,
