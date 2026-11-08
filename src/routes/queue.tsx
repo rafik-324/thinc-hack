@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDbImpact } from "@/lib/db-impact";
 import { useClaimSource } from "@/lib/live-claims";
 import { DECISION_LABELS, isChanged, type Decision } from "@/lib/policy-data";
 import { formatEur } from "@/lib/labels";
@@ -48,6 +49,8 @@ function ClaimsQueue() {
   const { mode, effectiveDecision, overrides, selectedClaimId, selectClaim } = usePolicy();
   const search = Route.useSearch();
   const { claims: allClaims, order: DECISION_ORDER, isLoading, error } = useClaimSource();
+  // Trust signal: does the engine reproduce the labelled v1 outcomes? (No labels exist for later versions.)
+  const v1Check = useDbImpact().data?.versions.get("v1");
   // Closed claims live on the History page; the overview only shows work awaiting action.
   const CLAIMS = useMemo(() => allClaims.filter((c) => c.status === "open"), [allClaims]);
   const [decisionFilter, setDecisionFilter] = useState<Decision | "all">("all");
@@ -150,6 +153,15 @@ function ClaimsQueue() {
                   </button>
                 ))}
               </div>
+              {v1Check && v1Check.validated > 0 && (
+                <p
+                  className="mt-4 border-t border-border pt-3 text-[11px] text-muted-foreground"
+                  title="Labelled development cases with an expected v1 outcome, compared with the engine's v1 decision"
+                >
+                  Engine check: {v1Check.validated - v1Check.wrong} of {v1Check.validated} labelled
+                  cases match the expected v1 outcome
+                </p>
+              )}
             </div>
             <SmallKpi
               label="Active claims"

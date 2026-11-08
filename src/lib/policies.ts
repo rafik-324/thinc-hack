@@ -123,6 +123,7 @@ export function useApplyPolicy() {
       qc.invalidateQueries({ queryKey: ["db-impact"] });
       qc.invalidateQueries({ queryKey: ["policies"] });
       qc.invalidateQueries({ queryKey: ["policy-run"] });
+      qc.invalidateQueries({ queryKey: ["policy-config"] });
     },
   });
 }
@@ -182,6 +183,34 @@ export function useLatestRun(version: string, enabled = true) {
         .limit(1);
       if (error) throw error;
       return (data as PolicyRun[])[0] ?? null;
+    },
+  });
+}
+
+/** How an applied policy was read: the model and the verbatim quotes backing each rule change. */
+export interface AppliedConfig {
+  version: string;
+  baseline_version: string;
+  created_at: string;
+  interpretation: {
+    summary?: string;
+    model?: string;
+    citations?: ApplyCitation[];
+  };
+}
+
+export function useAppliedConfig(version: string, enabled = true) {
+  return useQuery({
+    queryKey: ["policy-config", version],
+    enabled: enabled && version !== "v1",
+    queryFn: async (): Promise<AppliedConfig | null> => {
+      const { data, error } = await db
+        .from("policy_configs")
+        .select("version,baseline_version,created_at,interpretation")
+        .eq("version", version)
+        .limit(1);
+      if (error) throw error;
+      return (data as AppliedConfig[])[0] ?? null;
     },
   });
 }
