@@ -194,7 +194,7 @@ function PolicyUpdate() {
         },
         {
           label: "Human review queue",
-          value: `${hrBefore} → ${hrAfter}`,
+          value: `${hrBefore} · ${hrAfter}`,
           valueClass: hrDelta > 0 ? "text-decision-human" : undefined,
           sub: hrBefore
             ? `${signed(hrDelta)} (${signed(Math.round((hrDelta / hrBefore) * 100))}%) open claims`

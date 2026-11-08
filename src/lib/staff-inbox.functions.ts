@@ -51,10 +51,56 @@ async function staffPost(pathKey: UpstreamKey, body: Record<string, unknown>) {
   return response.json();
 }
 
+/**
+ * Local dev only: claims reported in the mobile preview (demo/chat-redesign) are stored by a local SQLite
+ * backend (`python3 -m backend --store sqlite --db backend/.local/mobile/inbox.sqlite3 --port 8766`).
+ * Its staff inbox is read with the reviewer key that backend generated. Returns null when it is not running.
+ */
+async function localInboxPost(
+  pathKey: UpstreamKey,
+  body: Record<string, unknown>,
+): Promise<unknown | null> {
+  if (!import.meta.env.DEV) return null;
+  const port = process.env["LOCAL_INBOX_PORT"] || "8766";
+  if (!/^[0-9]{1,5}$/.test(port)) return null;
+  let key: string;
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    key = (
+      await readFile(
+        join(process.cwd(), "..", "backend/.local/mobile/.evidence-keys/claim_reviewer_key"),
+        "utf8",
+      )
+    ).trim();
+  } catch {
+    return null;
+  }
+  let response: Response;
+  try {
+    response = await fetch(`http://127.0.0.1:${port}${UPSTREAM_PATHS[pathKey]}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      redirect: "error",
+      cache: "no-store",
+      body: JSON.stringify({ ...body, reviewer_key: key }),
+    });
+  } catch {
+    return null; // local inbox backend not running
+  }
+  if (response.status === 404) throw new Error("FORBIDDEN: unknown demo reference");
+  if (!response.ok) throw new Error(`UPSTREAM: local inbox request failed (${response.status})`);
+  return response.json();
+}
+
 // The local judge room has its own database, routes, and session credential.
 async function judgePost(pathKey: UpstreamKey, body: Record<string, unknown>) {
   const port = process.env["JUDGE_DEMO_PORT"];
   const key = process.env["JUDGE_DEMO_KEY"];
+  if (!port && !key) {
+    const local = await localInboxPost(pathKey, body);
+    if (local) return local;
+  }
   if (!port && !key && pathKey === "inbox") return { claims: [], next_cursor: null };
   if (!port && !key) throw new Error("FORBIDDEN: unknown demo reference");
   if (!port || !/^[0-9]{1,5}$/.test(port) || Number(port) > 65535 || !key || key.length < 32) {
