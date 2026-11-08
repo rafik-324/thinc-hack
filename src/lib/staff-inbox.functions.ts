@@ -52,44 +52,78 @@ async function staffPost(pathKey: UpstreamKey, body: Record<string, unknown>) {
 }
 
 /**
- * Local dev only: claims reported in the mobile preview (demo/chat-redesign) are stored by a local SQLite
- * backend (`python3 -m backend --store sqlite --db backend/.local/mobile/inbox.sqlite3 --port 8766`).
- * Its staff inbox is read with the reviewer key that backend generated. Returns null when it is not running.
+ * Inbox of claims reported in the mobile app. Its backend stores them (SQLite intake) and lists them via
+ * the staff API, protected by its reviewer key.
+ * - INBOX_API_ORIGIN + INBOX_REVIEWER_KEY (server env; in dev also the repo-root .env): e.g. the hosted
+ *   preview https://retakt.92-5-27-43.sslip.io.
+ * - Otherwise, in dev: the local SQLite backend on port 8766 (key file it generated).
+ * Returns null when no inbox backend is configured or reachable.
  */
-async function localInboxPost(
-  pathKey: UpstreamKey,
-  body: Record<string, unknown>,
-): Promise<unknown | null> {
+async function inboxSource(): Promise<{ base: string; key: string } | null> {
+  let origin = process.env["INBOX_API_ORIGIN"];
+  let key = process.env["INBOX_REVIEWER_KEY"];
+  if (import.meta.env.DEV && (!origin || !key)) {
+    try {
+      const { readFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      const text = await readFile(join(process.cwd(), "..", ".env"), "utf8");
+      for (const line of text.split(/\r?\n/)) {
+        const m = /^\s*(INBOX_API_ORIGIN|INBOX_REVIEWER_KEY)\s*=\s*(.*?)\s*$/.exec(line);
+        if (!m || !m[2]) continue;
+        if (m[1] === "INBOX_API_ORIGIN") origin ||= m[2];
+        else key ||= m[2];
+      }
+    } catch {
+      // no root .env
+    }
+  }
+  if (origin && key) {
+    try {
+      const url = new URL(origin);
+      if (url.protocol === "https:" || url.hostname === "127.0.0.1")
+        return { base: url.origin, key };
+    } catch {
+      // invalid origin: ignore
+    }
+    return null;
+  }
   if (!import.meta.env.DEV) return null;
-  const port = process.env["LOCAL_INBOX_PORT"] || "8766";
-  if (!/^[0-9]{1,5}$/.test(port)) return null;
-  let key: string;
   try {
     const { readFile } = await import("node:fs/promises");
     const { join } = await import("node:path");
-    key = (
+    const local = (
       await readFile(
         join(process.cwd(), "..", "backend/.local/mobile/.evidence-keys/claim_reviewer_key"),
         "utf8",
       )
     ).trim();
+    const port = process.env["LOCAL_INBOX_PORT"] || "8766";
+    return /^[0-9]{1,5}$/.test(port) ? { base: `http://127.0.0.1:${port}`, key: local } : null;
   } catch {
     return null;
   }
+}
+
+async function localInboxPost(
+  pathKey: UpstreamKey,
+  body: Record<string, unknown>,
+): Promise<unknown | null> {
+  const source = await inboxSource();
+  if (!source) return null;
   let response: Response;
   try {
-    response = await fetch(`http://127.0.0.1:${port}${UPSTREAM_PATHS[pathKey]}`, {
+    response = await fetch(`${source.base}${UPSTREAM_PATHS[pathKey]}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       redirect: "error",
       cache: "no-store",
-      body: JSON.stringify({ ...body, reviewer_key: key }),
+      body: JSON.stringify({ ...body, reviewer_key: source.key }),
     });
   } catch {
-    return null; // local inbox backend not running
+    return null; // inbox backend not reachable
   }
   if (response.status === 404) throw new Error("FORBIDDEN: unknown demo reference");
-  if (!response.ok) throw new Error(`UPSTREAM: local inbox request failed (${response.status})`);
+  if (!response.ok) throw new Error(`UPSTREAM: inbox request failed (${response.status})`);
   return response.json();
 }
 
