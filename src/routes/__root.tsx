@@ -14,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
+import { AssistantBlob } from "@/components/assistant-blob";
 import { Toaster } from "@/components/ui/sonner";
 import { PolicyProvider } from "@/lib/policy-store";
 
@@ -147,6 +148,7 @@ function RootComponent() {
             <Outlet />
           </AppShell>
         )}
+        <AssistantBlob />
         <Toaster />
       </PolicyProvider>
     </QueryClientProvider>
