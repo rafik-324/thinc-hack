@@ -207,6 +207,104 @@ export type Database = {
         }
         Relationships: []
       }
+      policy_configs: {
+        Row: {
+          baseline_version: string
+          config: Json
+          config_hash: string
+          created_at: string
+          interpretation: Json
+          policy_id: string
+          source_hash: string
+          version: string
+        }
+        Insert: {
+          baseline_version: string
+          config: Json
+          config_hash: string
+          created_at?: string
+          interpretation: Json
+          policy_id: string
+          source_hash: string
+          version: string
+        }
+        Update: {
+          baseline_version?: string
+          config?: Json
+          config_hash?: string
+          created_at?: string
+          interpretation?: Json
+          policy_id?: string
+          source_hash?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_configs_version_fkey"
+            columns: ["version"]
+            isOneToOne: true
+            referencedRelation: "policies"
+            referencedColumns: ["version"]
+          },
+        ]
+      }
+      policy_runs: {
+        Row: {
+          baseline_version: string
+          changed: number
+          claims_total: number
+          closed_retained: number
+          config_hash: string
+          created_at: string
+          id: number
+          needs_recheck: number
+          open_evaluated: number
+          rows: Json
+          version: string
+        }
+        Insert: {
+          baseline_version: string
+          changed: number
+          claims_total: number
+          closed_retained: number
+          config_hash: string
+          created_at?: string
+          id?: never
+          needs_recheck: number
+          open_evaluated: number
+          rows: Json
+          version: string
+        }
+        Update: {
+          baseline_version?: string
+          changed?: number
+          claims_total?: number
+          closed_retained?: number
+          config_hash?: string
+          created_at?: string
+          id?: never
+          needs_recheck?: number
+          open_evaluated?: number
+          rows?: Json
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_runs_version_fkey"
+            columns: ["version"]
+            isOneToOne: false
+            referencedRelation: "policy_configs"
+            referencedColumns: ["version"]
+          },
+          {
+            foreignKeyName: "policy_runs_version_fkey"
+            columns: ["version"]
+            isOneToOne: false
+            referencedRelation: "v_policy_changes"
+            referencedColumns: ["version"]
+          },
+        ]
+      }
       validation_results: {
         Row: {
           case_id: string
@@ -285,6 +383,30 @@ export type Database = {
           value: number | null
         }
         Relationships: []
+      }
+      v_policy_changes: {
+        Row: {
+          baseline_version: string | null
+          case_id: string | null
+          case_status: string | null
+          changed: boolean | null
+          clause_after: string | null
+          explanation_after: string | null
+          recommendation_after: string | null
+          recommendation_before: string | null
+          rule_after: string | null
+          rule_before: string | null
+          version: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_configs_version_fkey"
+            columns: ["version"]
+            isOneToOne: true
+            referencedRelation: "policies"
+            referencedColumns: ["version"]
+          },
+        ]
       }
       v_rule_impact: {
         Row: {
