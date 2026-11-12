@@ -14,4 +14,16 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  // These paths must stay registered because the submitted-claims inbox links to them.
+  it.each(["/auth", "/submitted", "/submitted/CLM-1"])(
+    "matches the submitted-claims route %s",
+    (path) => {
+      const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+      const matches = router.matchRoutes(path);
+
+      expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
+    },
+  );
 });
